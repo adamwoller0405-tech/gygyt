@@ -146,7 +146,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({
         ))}
       </div>
 
-      <div className="flex-1 p-3.5 overflow-y-auto space-y-4 scroll-smooth" ref={scrollRef}>
+      <div className="flex-1 p-3.5 overflow-y-auto space-y-4 scroll-smooth max-w-lg mx-auto w-full" ref={scrollRef}>
         {currentChatMessages.map(msg => (
           <div key={msg.id} className={`flex flex-col ${msg.senderId === currentUser.id ? 'items-end' : 'items-start'} group max-w-[90%] ${msg.senderId === currentUser.id ? 'ml-auto' : 'mr-auto'} animate-fade-in`}>
             <div className="flex items-start space-x-2">

@@ -80,7 +80,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-8 max-w-md mx-auto w-full pb-24">
+        <div className="p-6 space-y-8 max-w-lg mx-auto w-full pb-24">
           
           <div className="bg-bg-card rounded-[48px] p-8 border border-border-card relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-brand-orange/5 rounded-full blur-[70px] -mr-24 -mt-24" />
@@ -176,7 +176,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           ))}
         </div>
 
-        <div className="p-6 pb-24">
+        <div className="p-6 pb-24 max-w-lg mx-auto w-full">
           {memberList.length === 0 ? (
              <div className="text-center py-20 text-neutral-800 uppercase font-black text-xs">Nincsenek tagok</div>
           ) : (

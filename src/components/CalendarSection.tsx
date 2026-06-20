@@ -48,7 +48,7 @@ export const CalendarSection: React.FC<Props> = ({ events }) => {
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-4 max-w-lg mx-auto w-full">
         <div className="grid grid-cols-7 gap-1 mb-2">
           {DAYS.map(d => (
             <div key={d} className="text-center text-[9px] font-black text-neutral-600 uppercase tracking-wider py-1">{d}</div>
@@ -91,7 +91,7 @@ export const CalendarSection: React.FC<Props> = ({ events }) => {
       </div>
 
       {selectedEvents.length > 0 && (
-        <div className="px-4 pb-24 space-y-3">
+        <div className="px-4 pb-24 space-y-3 max-w-lg mx-auto w-full">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-1">
             Események • {selectedDay}. {MONTHS[month]}
           </h3>
@@ -110,7 +110,7 @@ export const CalendarSection: React.FC<Props> = ({ events }) => {
       )}
 
       {selectedDay && selectedEvents.length === 0 && (
-        <div className="px-4 pb-24">
+        <div className="px-4 pb-24 max-w-lg mx-auto w-full">
           <p className="text-center text-xs text-neutral-600 font-bold py-10">Nincs esemény ezen a napon</p>
         </div>
       )}

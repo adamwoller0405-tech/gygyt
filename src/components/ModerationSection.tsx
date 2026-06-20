@@ -127,7 +127,7 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-24">
+      <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-24 max-w-lg mx-auto w-full">
         
         {/* Requests */}
         <div className="space-y-4">
