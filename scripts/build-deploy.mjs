@@ -23,14 +23,24 @@ const SPA_TMP = path.resolve(ROOT, 'dist-spa-tmp');
 
 console.log('=== GYGYT Cloudflare Pages Build ===\n');
 
+// 0. Generate version
+console.log('[0/6] Generating version...');
+let buildNum = '1';
+try {
+  buildNum = execSync('git rev-list --count HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
+} catch {}
+const version = `2.${buildNum}.0`;
+fs.writeFileSync(path.resolve(ROOT, 'src', 'lib', 'version.ts'), `export const APP_VERSION = '${version}';\n`);
+console.log(`  - Version: ${version}`);
+
 // 1. Clean directories
-console.log('[1/5] Cleaning directories...');
+console.log('[1/6] Cleaning directories...');
 for (const dir of [DIST, SPA_TMP]) {
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
 // 2. Build Vite SPA into temp directory
-console.log('[2/5] Building React SPA...');
+console.log('[2/6] Building React SPA...');
 execSync('npx vite build --outDir="dist-spa-tmp"', {
   cwd: ROOT,
   stdio: 'inherit',
@@ -38,7 +48,7 @@ execSync('npx vite build --outDir="dist-spa-tmp"', {
 });
 
 // 3. Organize dist/
-console.log('[3/5] Organizing output...');
+console.log('[3/6] Organizing output...');
 fs.mkdirSync(DIST, { recursive: true });
 
 // Move SPA build to dist/app/
@@ -48,7 +58,7 @@ if (fs.existsSync(SPA_TMP)) {
 }
 
 // 4. Copy landing page and APK
-console.log('[4/5] Copying landing page and APK...');
+console.log('[4/6] Copying landing page and APK...');
 
 if (fs.existsSync(path.resolve(LANDING, 'index.html'))) {
   fs.copyFileSync(path.resolve(LANDING, 'index.html'), path.resolve(DIST, 'index.html'));
@@ -65,7 +75,7 @@ if (fs.existsSync(path.resolve(LANDING, 'downloads'))) {
 }
 
 // 5. Create Cloudflare Pages _redirects
-console.log('[5/5] Creating _redirects file...');
+console.log('[5/6] Creating _redirects file...');
 const redirects = [
   '# Cloudflare Pages _redirects for GYGYT',
   '# SPA fallback: any /app/* path serves /app/index.html',

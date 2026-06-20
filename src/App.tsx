@@ -50,6 +50,7 @@ const CalendarSection = lazy(() => import('./components/CalendarSection').then(m
 
 import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report } from './types';
 import { DEFAULT_AVATAR } from './lib/defaults';
+import { APP_VERSION } from './lib/version';
 import { ToastProvider, useToast } from './components/Toast';
 
 export default function App() {
@@ -320,7 +321,7 @@ function AppContent() {
 
         <nav className="h-20 nav-safe-area bg-bg-panel border-t border-border-subtle flex items-center justify-around px-4 pb-4 relative z-30 shadow-2xl">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/5 text-[7px] text-neutral-600 font-black tracking-widest uppercase">
-            GYGYT Live v2.3.0
+            {'GYGYT Live v' + APP_VERSION}
           </div>
 
           {[
