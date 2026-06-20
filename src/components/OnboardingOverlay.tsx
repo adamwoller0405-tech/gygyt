@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bike, MessageSquare, Calendar, User, ChevronRight } from 'lucide-react';
+import { Bike, MessageSquare, Calendar, ChevronRight } from 'lucide-react';
 
 const slides = [
   {

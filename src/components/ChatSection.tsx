@@ -14,25 +14,18 @@ interface ChatSectionProps {
   currentUser: UserProfile;
   users: UserProfile[];
   onUpdateChats: (updatedChats: ChatMessage[]) => void;
-  onReport?: (messageId: string) => void;
 }
-
-const PRESET_EMOJIS = ['🔥', '👍', '❤️', '🎯', '🚴‍♂️', '🍕'];
 
 export const ChatSection: React.FC<ChatSectionProps> = ({
   chats,
   currentUser,
   users,
-  onUpdateChats,
-  onReport
+  onUpdateChats
 }) => {
   const { toast } = useToast();
   const [activeChannel, setActiveChannel] = useState<string>('global');
   const [messageText, setMessageText] = useState<string>('');
   const [replyMessage, setReplyMessage] = useState<ChatMessage | null>(null);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editMessageText, setEditMessageText] = useState<string>('');
-  const [showEmojiPickerId, setShowEmojiPickerId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 

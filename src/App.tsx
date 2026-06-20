@@ -13,8 +13,6 @@ import {
   LogOut,
   Clock,
   Loader2,
-  Image,
-  Flag,
   ShieldX,
   Link2
 } from 'lucide-react';
@@ -90,6 +88,7 @@ function AppContent() {
     return onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {
+        setTimeout(() => setLoading(false), 10000);
         const userDoc = doc(db, 'users', user.uid);
         const snap = await getDoc(userDoc);
         if (!snap.exists() && user.email === 'admin@gygyt.app') {
@@ -268,7 +267,7 @@ function AppContent() {
                 const old = posts.find(op => op.id === p.id);
                 if (!old || JSON.stringify(old) !== JSON.stringify(p)) await setDoc(doc(db, 'posts', p.id), p);
               }
-            }} users={users} onReport={(id) => handleReport('post', id)} />}
+            }} />}
 
             {currentTab === 'chat' && <ChatSection chats={chats} currentUser={activeUser} users={users} onUpdateChats={async (uc) => {
               const deletedIds = chats.filter(oc => !uc.find(c => c.id === oc.id)).map(c => c.id);
@@ -277,7 +276,7 @@ function AppContent() {
                 const old = chats.find(oc => oc.id === c.id);
                 if (!old || JSON.stringify(old) !== JSON.stringify(c)) await setDoc(doc(db, 'chats', c.id), c);
               }
-            }} onReport={(id) => handleReport('chat', id)} />}
+            }} />}
 
             {currentTab === 'events' && <EventsSection events={events} currentUser={activeUser} users={users} onUpdateEvents={async (ue) => {
               const deletedIds = events.filter(oe => !ue.find(e => e.id === oe.id)).map(e => e.id);

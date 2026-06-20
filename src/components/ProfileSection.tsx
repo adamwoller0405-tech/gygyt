@@ -8,7 +8,6 @@ import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, L
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { UserProfile, UserRank } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
-import { ACHIEVEMENTS } from '../data/mockData';
 
 interface ProfileSectionProps {
   users: UserProfile[];
@@ -42,7 +41,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           onUpdateCurrentUser({ ...currentUser, avatarUrl: url });
         }
       }
-    } catch (err) { console.error(err); } finally { setIsUploading(false); }
+    } catch { } finally { setIsUploading(false); }
   };
 
   const handleSaveProfile = () => {
@@ -50,13 +49,6 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
     onUpdateCurrentUser(updated);
     setIsEditing(false);
   };
-
-  const achievementsWithStatus = ACHIEVEMENTS.map(ach => ({
-    ...ach,
-    hasUnlocked: currentUser.achievements.includes(ach.id)
-  }));
-
-  const unlockedCount = achievementsWithStatus.filter(a => a.hasUnlocked).length;
 
   return (
       <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-y-auto">

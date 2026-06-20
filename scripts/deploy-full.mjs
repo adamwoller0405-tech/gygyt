@@ -41,4 +41,7 @@ console.log('\n[6/6] Staging all changes...');
 execSync('git add -A', { cwd: ROOT, stdio: 'inherit' });
 
 console.log('\n=== Full deploy ready! ===');
-console.log('Run: git commit -m "update v$(node -e "console.log(require('./src/lib/version').APP_VERSION)")" && git push origin master');
+const verContent = fs.readFileSync(path.resolve(ROOT, 'src', 'lib', 'version.ts'), 'utf8');
+const verMatch = verContent.match(/'([^']+)'/);
+const ver = verMatch ? verMatch[1] : '?';
+console.log(`Run: git commit -m "update v${ver}" && git push origin master`);

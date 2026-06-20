@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Trash2, Hash, Camera, Loader2, X, ZoomIn } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Camera, Loader2, X, ZoomIn } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { FeedPost, UserProfile, UserRank, FeedComment } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -13,18 +13,12 @@ interface FeedSectionProps {
   posts: FeedPost[];
   currentUser: UserProfile;
   onUpdatePosts: (updatedPosts: FeedPost[]) => void;
-  users: UserProfile[];
-  onSavePost?: (postId: string) => void;
-  onReport?: (postId: string) => void;
 }
 
 export const FeedSection: React.FC<FeedSectionProps> = ({
   posts,
   currentUser,
-  onUpdatePosts,
-  users,
-  onSavePost,
-  onReport
+  onUpdatePosts
 }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all');
   const [showNewPostModal, setShowNewPostModal] = useState(false);

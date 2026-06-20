@@ -16,9 +16,9 @@ export const ContactSection: React.FC = () => {
   const handleShare = async () => {
     const url = SITE_URL;
     if (navigator.share) {
-      await navigator.share({ title: 'GYGYT Tekerés', url });
+      try { await navigator.share({ title: 'GYGYT Tekerés', url }); } catch {}
     } else {
-      await navigator.clipboard.writeText(url);
+      try { await navigator.clipboard.writeText(url); } catch {}
     }
   };
 

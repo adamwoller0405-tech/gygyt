@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Calendar, MapPin, Gauge, Mountain, Award, Flame, Users, PlusCircle, Check, HelpCircle, X, Camera, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Gauge, Mountain, Award, Users, PlusCircle, Check, HelpCircle, X, Camera, Trash2 } from 'lucide-react';
 import { CyclingEvent, UserProfile, UserRank } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
 import { useToast } from './Toast';

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { LogIn, UserPlus, Bike, ArrowRight, ShieldCheck, Mail, Lock, User } from 'lucide-react';
+import { Bike, ArrowRight } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { useToast } from './Toast';
