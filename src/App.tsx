@@ -180,6 +180,13 @@ function AppContent() {
   };
 
   const activeUser = users.find(u => u.id === firebaseUser?.uid || u.email === firebaseUser?.email);
+
+  // Fallback: if user is authenticated but not in users collection,
+  // check if their join request was approved
+  const isApproved = !activeUser && firebaseUser && joinRequests.some(r =>
+    r.firebaseUid === firebaseUser.uid && r.status === 'approved'
+  );
+
   const isMod = activeUser && (activeUser.rank === UserRank.ADMIN || activeUser.rank === UserRank.ELITE);
 
   if (loading) return <div className="flex items-center justify-center h-screen bg-bg-deep"><Bike size={48} className="text-brand-orange animate-pulse" /></div>;
@@ -207,6 +214,26 @@ function AppContent() {
   }
 
   if (!activeUser) {
+    if (isApproved) {
+      return (
+        <div className="flex-1 bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
+          <div className="relative">
+            <Loader2 size={64} className="text-brand-orange animate-spin" />
+            <div className="absolute inset-0 bg-brand-orange/20 blur-2xl rounded-full" />
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Profil betöltése</h2>
+            <p className="text-xs text-neutral-500 font-bold max-w-xs mx-auto leading-relaxed">
+              Fiókodat jóváhagyták! A profil adatok szinkronizálása folyamatban van. Kérlek várj...
+            </p>
+          </div>
+          <button onClick={handleLogout} className="text-[10px] font-black text-neutral-600 uppercase tracking-widest border border-white/5 px-6 py-3 rounded-2xl hover:text-white transition-all flex items-center space-x-2">
+            <LogOut size={14} />
+            <span>Kijelentkezés</span>
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="flex-1 bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
         <div className="relative">
@@ -235,18 +262,30 @@ function AppContent() {
         <div className="flex-1 overflow-hidden relative">
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 size={32} className="text-brand-orange animate-spin" /></div>}>
             {currentTab === 'feed' && <FeedSection posts={posts} currentUser={activeUser} onUpdatePosts={async (up) => {
-              const added = up.find(p => !posts.find(op => op.id === p.id));
-              if (added) await setDoc(doc(db, 'posts', added.id), added);
+              const deletedIds = posts.filter(op => !up.find(p => p.id === op.id)).map(p => p.id);
+              for (const id of deletedIds) await deleteDoc(doc(db, 'posts', id));
+              for (const p of up) {
+                const old = posts.find(op => op.id === p.id);
+                if (!old || JSON.stringify(old) !== JSON.stringify(p)) await setDoc(doc(db, 'posts', p.id), p);
+              }
             }} users={users} onReport={(id) => handleReport('post', id)} />}
 
             {currentTab === 'chat' && <ChatSection chats={chats} currentUser={activeUser} users={users} onUpdateChats={async (uc) => {
-              const added = uc.find(c => !chats.find(oc => oc.id === c.id));
-              if (added) await setDoc(doc(db, 'chats', added.id), added);
+              const deletedIds = chats.filter(oc => !uc.find(c => c.id === oc.id)).map(c => c.id);
+              for (const id of deletedIds) await deleteDoc(doc(db, 'chats', id));
+              for (const c of uc) {
+                const old = chats.find(oc => oc.id === c.id);
+                if (!old || JSON.stringify(old) !== JSON.stringify(c)) await setDoc(doc(db, 'chats', c.id), c);
+              }
             }} onReport={(id) => handleReport('chat', id)} />}
 
             {currentTab === 'events' && <EventsSection events={events} currentUser={activeUser} users={users} onUpdateEvents={async (ue) => {
-              const diff = ue.find(e => JSON.stringify(e) !== JSON.stringify(events.find(oe => oe.id === e.id)));
-              if (diff) await setDoc(doc(db, 'events', diff.id), diff);
+              const deletedIds = events.filter(oe => !ue.find(e => e.id === oe.id)).map(e => e.id);
+              for (const id of deletedIds) await deleteDoc(doc(db, 'events', id));
+              for (const e of ue) {
+                const old = events.find(oe => oe.id === e.id);
+                if (!old || JSON.stringify(old) !== JSON.stringify(e)) await setDoc(doc(db, 'events', e.id), e);
+              }
             }} onUserStatsUpdate={async (uid, stats) => {
               await updateDoc(doc(db, 'users', uid), {
                 stats: { totalKm: stats.km, elevationGainedM: stats.elevation, eventsJoined: stats.events }
@@ -262,8 +301,10 @@ function AppContent() {
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 
             {currentTab === 'moderation' && <ModerationSection joinRequests={joinRequests} users={users} currentUser={activeUser} onUpdateJoinRequests={async (reqs) => {
-              const diff = reqs.find(r => r.status !== joinRequests.find(or => or.id === r.id)?.status);
-              if (diff) await setDoc(doc(db, 'joinRequests', diff.id), diff);
+              for (const r of reqs) {
+                const old = joinRequests.find(or => or.id === r.id);
+                if (!old || old.status !== r.status) await setDoc(doc(db, 'joinRequests', r.id), r);
+              }
             }} onUpdateUsers={async (uList) => {
               for (const u of uList) {
                 const old = users.find(ou => ou.id === u.id);
