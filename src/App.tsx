@@ -7,7 +7,6 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import {
   MessageSquare,
   Calendar,
-  User as UserIcon,
   ShieldAlert,
   Compass,
   Bike,
@@ -16,7 +15,8 @@ import {
   Loader2,
   Image,
   Flag,
-  ShieldX
+  ShieldX,
+  Link2
 } from 'lucide-react';
 
 import {
@@ -47,6 +47,7 @@ const ProfileSection = lazy(() => import('./components/ProfileSection').then(m =
 const ModerationSection = lazy(() => import('./components/ModerationSection').then(m => ({ default: m.ModerationSection })));
 const PhotoGallery = lazy(() => import('./components/PhotoGallery').then(m => ({ default: m.PhotoGallery })));
 const CalendarSection = lazy(() => import('./components/CalendarSection').then(m => ({ default: m.CalendarSection })));
+const ContactSection = lazy(() => import('./components/ContactSection').then(m => ({ default: m.ContactSection })));
 
 import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report } from './types';
 import { DEFAULT_AVATAR } from './lib/defaults';
@@ -71,7 +72,7 @@ function AppContent() {
 
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState<'feed' | 'chat' | 'events' | 'calendar' | 'members' | 'profile' | 'moderation' | 'gallery'>('feed');
+  const [currentTab, setCurrentTab] = useState<'feed' | 'chat' | 'events' | 'calendar' | 'contact' | 'profile' | 'moderation' | 'gallery'>('feed');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'chat' | 'user'; id: string } | null>(null);
 
@@ -293,9 +294,9 @@ function AppContent() {
 
             {currentTab === 'calendar' && <CalendarSection events={events} />}
 
-            {currentTab === 'members' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} mode="members" />}
+            {currentTab === 'contact' && <ContactSection />}
 
-            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} mode="personal" />}
+            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} />}
 
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 
@@ -328,7 +329,7 @@ function AppContent() {
             { id: 'feed', icon: Compass, label: 'Hírfolyam' },
             { id: 'chat', icon: MessageSquare, label: 'Chat' },
             { id: 'events', icon: Calendar, label: 'Tekerések' },
-            { id: 'members', icon: UserIcon, label: 'Tagok' },
+            { id: 'contact', icon: Link2, label: 'Kapcsolat' },
             { id: 'calendar', icon: Clock, label: 'Naptár' },
           ].map(t => (
             <button key={t.id} onClick={() => setCurrentTab(t.id as any)} className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-300 ${currentTab === t.id ? 'text-brand-orange scale-110' : 'text-neutral-600'}`}>

@@ -15,7 +15,6 @@ interface ProfileSectionProps {
   currentUser: UserProfile;
   onUpdateCurrentUser: (updatedUser: UserProfile) => void;
   onLogout?: () => void;
-  mode: 'members' | 'personal';
 }
 
 export const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -23,19 +22,11 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   currentUser,
   onUpdateCurrentUser,
   onLogout,
-  mode
 }) => {
-  const [selectedUserId, setSelectedUserId] = useState<string>(currentUser.id);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(currentUser.name);
   const [editAvatar, setEditAvatar] = useState(currentUser.avatarUrl);
   const [isUploading, setIsUploading] = useState(false);
-
-  // Filter out Admin from the public list
-  const memberList = users.filter(u => u.rank !== UserRank.ADMIN && !u.isBanned);
-
-  const selectedUser = users.find(u => u.id === selectedUserId) || currentUser;
-  const isViewingSelf = selectedUser.id === currentUser.id;
 
   const handleUploadAvatar = async () => {
     try {
@@ -62,13 +53,12 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
 
   const achievementsWithStatus = ACHIEVEMENTS.map(ach => ({
     ...ach,
-    hasUnlocked: (isViewingSelf ? currentUser : selectedUser).achievements.includes(ach.id)
+    hasUnlocked: currentUser.achievements.includes(ach.id)
   }));
 
   const unlockedCount = achievementsWithStatus.filter(a => a.hasUnlocked).length;
 
-  if (mode === 'personal') {
-    return (
+  return (
       <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-y-auto">
         
         <div className="px-6 py-5 bg-bg-panel border-b border-border-subtle flex items-center justify-between sticky top-0 z-20 shadow-xl">
@@ -153,52 +143,4 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
         </div>
       </div>
     );
-  }
-
-  // MEMBERS LIST
-  return (
-    <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-hidden">
-      <div className="px-6 py-5 bg-bg-panel border-b border-border-subtle shadow-lg z-20">
-        <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center space-x-3">
-          <User className="text-brand-orange" size={20} />
-          <span>Csapattagok ({memberList.length})</span>
-        </h2>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="bg-bg-panel/20 p-5 border-b border-border-subtle flex space-x-5 overflow-x-auto scrollbar-none">
-          {memberList.map(u => (
-            <button key={u.id} onClick={() => setSelectedUserId(u.id)} className={`flex flex-col items-center flex-shrink-0 transition-all duration-500 ${u.id === selectedUserId ? 'scale-110' : 'opacity-40 grayscale'}`}>
-              <div className="relative">
-                <img src={u.avatarUrl} className={`w-16 h-16 rounded-[28px] object-cover border-2 shadow-2xl ${u.id === selectedUserId ? 'border-brand-orange rotate-3' : 'border-transparent'}`} alt="" />
-                <div className="absolute -bottom-1 -right-1 bg-bg-deep rounded-full border border-border-subtle p-0.5"><BadgeRenderer rank={u.rank} size={20} /></div>
-              </div>
-              <span className={`text-[10px] font-black mt-2 text-center truncate w-20 ${u.id === selectedUserId ? 'text-brand-orange' : 'text-neutral-500'}`}>{u.name.split(' ')[1]}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="p-6 pb-24 max-w-lg mx-auto w-full">
-          {memberList.length === 0 ? (
-             <div className="text-center py-20 text-neutral-800 uppercase font-black text-xs">Nincsenek tagok</div>
-          ) : (
-            <div className="bg-bg-card rounded-[48px] p-8 border border-border-card shadow-2xl animate-fade-in text-center">
-              <div className="relative inline-block mb-6">
-                <img src={selectedUser.avatarUrl} className="w-32 h-32 rounded-[44px] object-cover border-2 border-white/5 shadow-2xl" alt="" />
-                <div className="absolute -bottom-4 -right-4 drop-shadow-2xl"><BadgeRenderer rank={selectedUser.rank} size={64} /></div>
-              </div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-tight">{selectedUser.name}</h3>
-              <p className="text-[10px] font-black text-brand-orange mt-2 tracking-[4px] uppercase">{selectedUser.rank} OSZTÁLY</p>
-
-              <div className="grid grid-cols-3 gap-4 border-t border-border-subtle/50 mt-8 pt-8 font-mono">
-                <div><p className="text-[9px] font-black text-neutral-600 uppercase">Kor</p><p className="text-sm font-black text-white mt-1">{selectedUser.age}</p></div>
-                <div className="border-x border-border-subtle/50"><p className="text-[9px] font-black text-neutral-600 uppercase tracking-tighter">Iskola</p><p className="text-[10px] font-black text-white mt-1 truncate px-1">{selectedUser.school}</p></div>
-                <div><p className="text-[9px] font-black text-neutral-600 uppercase">Tagság</p><p className="text-sm font-black text-white mt-1">{new Date(selectedUser.joinedDate).getFullYear() % 100}</p></div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+  };

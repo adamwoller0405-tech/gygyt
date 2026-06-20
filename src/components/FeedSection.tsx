@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Trash2, Hash, Camera, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Trash2, Hash, Camera, Loader2, X, ZoomIn } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { FeedPost, UserProfile, UserRank, FeedComment } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -34,6 +34,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   const [isMediaVideo, setIsMediaVideo] = useState(false);
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
   const [currentHashFilter, setCurrentHashFilter] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const isEditor = currentUser.rank === UserRank.ADMIN || currentUser.rank === UserRank.ELITE;
 
@@ -149,11 +150,16 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                 </div>
               </div>
 
-              <div className="aspect-[4/3] bg-neutral-950 flex items-center justify-center relative overflow-hidden rounded-none">
+              <div className="aspect-[4/3] bg-neutral-950 flex items-center justify-center relative overflow-hidden rounded-none cursor-pointer group/media" onClick={() => setLightboxUrl(post.mediaUrls[0])}>
                 {post.mediaType === 'video' ? (
-                  <video src={post.mediaUrls[0]} className="w-full h-full object-cover" controls />
+                  <video src={post.mediaUrls[0]} className="w-full h-full object-cover" controls onClick={(e) => e.stopPropagation()} />
                 ) : (
-                  <img src={post.mediaUrls[0]} className="w-full h-full object-cover" alt="" />
+                  <>
+                    <img src={post.mediaUrls[0]} className="w-full h-full object-cover" alt="" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/media:bg-black/20 transition-all">
+                      <ZoomIn className="text-white opacity-0 group-hover/media:opacity-100 transition-all" size={28} />
+                    </div>
+                  </>
                 )}
               </div>
 
@@ -254,6 +260,104 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
         </div>
       )}
 
+      {lightboxUrl && <ImageViewer url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
+
+    </div>
+  );
+};
+
+const ImageViewer: React.FC<{ url: string; onClose: () => void }> = ({ url, onClose }) => {
+  const imgRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const lastDist = useRef(0);
+  const dragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const dragPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  const getDist = (t: React.TouchEvent<HTMLDivElement>) => {
+    if (t.touches.length < 2) return 0;
+    const dx = t.touches[0].clientX - t.touches[1].clientX;
+    const dy = t.touches[0].clientY - t.touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      lastDist.current = getDist(e);
+    } else if (e.touches.length === 1 && scale > 1) {
+      dragging.current = true;
+      dragStart.current = { x: e.touches[0].clientX - dragPos.current.x, y: e.touches[0].clientY - dragPos.current.y };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      const dist = getDist(e);
+      if (lastDist.current > 0) {
+        const newScale = Math.max(1, Math.min(5, scale * (dist / lastDist.current)));
+        setScale(newScale);
+      }
+      lastDist.current = dist;
+    } else if (e.touches.length === 1 && dragging.current) {
+      const newPos = {
+        x: e.touches[0].clientX - dragStart.current.x,
+        y: e.touches[0].clientY - dragStart.current.y,
+      };
+      dragPos.current = newPos;
+      setPos(newPos);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    dragging.current = false;
+    lastDist.current = 0;
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setScale(s => Math.max(1, Math.min(5, s * delta)));
+  };
+
+  const resetZoom = () => {
+    setScale(1);
+    setPos({ x: 0, y: 0 });
+    dragPos.current = { x: 0, y: 0 };
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-fade-in touch-none select-none"
+      onClick={onClose}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onWheel={handleWheel}
+    >
+      <button onClick={onClose} className="absolute top-6 right-6 z-10 text-white/70 hover:text-white p-2"><X size={28} /></button>
+      {scale > 1 && (
+        <button onClick={resetZoom} className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-white/10 text-white text-xs font-black px-5 py-2 rounded-full backdrop-blur-md hover:bg-white/20 transition-all">
+          1:1 ({scale.toFixed(1)}x)
+        </button>
+      )}
+      <div
+        ref={imgRef}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          transform: `scale(${scale}) translate(${pos.x / scale}px, ${pos.y / scale}px)`,
+          transition: dragging.current ? 'none' : 'transform 0.2s ease-out',
+        }}
+        className="max-w-full max-h-full flex items-center justify-center"
+      >
+        <img src={url} className="max-w-[95vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl" alt="" draggable={false} />
+      </div>
     </div>
   );
 };
