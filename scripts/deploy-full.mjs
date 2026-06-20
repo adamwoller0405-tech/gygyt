@@ -8,32 +8,37 @@ const ROOT = path.resolve(__dirname, '..');
 
 console.log('=== GYGYT Full Deploy (web + APK) ===\n');
 
-// 1. Version
+// 0. Version
 execSync('node scripts/version.mjs', { cwd: ROOT, stdio: 'inherit' });
 
-// 2. Build web app
-console.log('\n[1/5] Building web app...');
-execSync('npx vite build', { cwd: ROOT, stdio: 'inherit' });
+// 1. Build for Android (base /)
+console.log('\n[1/6] Building web app for Android...');
+execSync('npx vite build', { cwd: ROOT, stdio: 'inherit', env: { ...process.env, VITE_BASE_PATH: '/' } });
+console.log('  - Built with base path "/"');
 
-// 3. Sync to Android
-console.log('\n[2/5] Syncing to Android...');
+// 2. Sync to Android
+console.log('\n[2/6] Syncing to Android...');
 execSync('npx cap sync android', { cwd: ROOT, stdio: 'inherit' });
 
-// 4. Build APK
-console.log('\n[3/5] Building APK...');
+// 3. Build APK
+console.log('\n[3/6] Building APK...');
 execSync('gradlew.bat assembleRelease', { cwd: path.resolve(ROOT, 'android'), stdio: 'inherit' });
 
-// 5. Copy APK to landing
-console.log('\n[4/5] Copying APK...');
+// 4. Copy APK to landing
+console.log('\n[4/6] Copying APK...');
 fs.cpSync(
   path.resolve(ROOT, 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk'),
   path.resolve(ROOT, 'landing', 'downloads', 'gygyt.apk')
 );
 console.log('  - APK copied to landing/downloads/');
 
-// 6. Build deploy output
-console.log('\n[5/5] Building deploy output...');
+// 5. Build for Cloudflare (base /app/)
+console.log('\n[5/6] Building web app for Cloudflare...');
 execSync('node scripts/build-deploy.mjs', { cwd: ROOT, stdio: 'inherit' });
 
+// 6. Git
+console.log('\n[6/6] Staging all changes...');
+execSync('git add -A', { cwd: ROOT, stdio: 'inherit' });
+
 console.log('\n=== Full deploy ready! ===');
-console.log('Run: git add . && git commit -m "update" && git push origin master');
+console.log('Run: git commit -m "update v$(node -e "console.log(require('./src/lib/version').APP_VERSION)")" && git push origin master');
