@@ -1,11 +1,6 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState } from 'react';
 import { Bike, ArrowRight } from 'lucide-react';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { useToast } from './Toast';
 
@@ -35,6 +30,17 @@ export const AuthSection: React.FC<AuthSectionProps> = ({ onLogin, onRegister })
     }
   };
 
+  const handlePasswordReset = async () => {
+    const email = username.includes('@') ? username : `${username.toLowerCase()}@gygyt.app`;
+    if (!email) { toast('Írd be az e-mail címed a jelszó mezőbe!', 'warning'); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast('Jelszó-visszaállítási link elküldve! Nézd meg az e-mail fiókodat.');
+    } catch (err: any) {
+      toast(`Hiba: ${err.message}`, 'error');
+    }
+  };
+
   return (
     <div className="flex-1 min-h-dynamic bg-bg-deep flex flex-col items-center justify-center p-6 animate-fade-in overflow-y-auto">
       <div className="max-w-sm w-full space-y-8">
@@ -59,6 +65,7 @@ export const AuthSection: React.FC<AuthSectionProps> = ({ onLogin, onRegister })
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" className="w-5 h-5" />
               <span>Belépés Google-el</span>
             </button>
+            <button type="button" onClick={handlePasswordReset} className="w-full text-[10px] font-black text-neutral-600 hover:text-brand-orange transition-colors uppercase tracking-widest py-2">Elfelejtett jelszó?</button>
           </form>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); onRegister({ email: regEmail, password: regPassword, name: regName, age: Number(regAge), school: regSchool, intro: regIntro }); }} className="space-y-4 animate-fade-in">

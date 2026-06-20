@@ -65,6 +65,7 @@ export interface ChatMessage {
   };
   readBy?: string[]; // userIds
   isEdited?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface CyclingEvent {
@@ -140,4 +141,16 @@ export interface Report {
   description: string;
   createdAt: string;
   status: 'pending' | 'resolved' | 'dismissed';
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: 'like' | 'comment' | 'event_rsvp';
+  fromUserId: string;
+  fromName: string;
+  postId?: string;
+  eventId?: string;
+  read: boolean;
+  createdAt: string;
 }

@@ -1,19 +1,17 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState } from 'react';
-import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2 } from 'lucide-react';
+import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
-import { UserProfile, UserRank } from '../types';
+import { UserProfile } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
+import { ACHIEVEMENTS } from '../data/mockData';
 
 interface ProfileSectionProps {
   users: UserProfile[];
   currentUser: UserProfile;
   onUpdateCurrentUser: (updatedUser: UserProfile) => void;
   onLogout?: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -21,6 +19,8 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   currentUser,
   onUpdateCurrentUser,
   onLogout,
+  theme = 'dark',
+  onToggleTheme
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(currentUser.name);
@@ -50,9 +50,15 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
     setIsEditing(false);
   };
 
+  const achievementsWithStatus = ACHIEVEMENTS.map(ach => ({
+    ...ach,
+    hasUnlocked: currentUser.achievements.includes(ach.id)
+  }));
+
+  const unlockedCount = achievementsWithStatus.filter(a => a.hasUnlocked).length;
+
   return (
       <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-y-auto">
-        
         <div className="px-6 py-5 bg-bg-panel border-b border-border-subtle flex items-center justify-between sticky top-0 z-20 shadow-xl">
           <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center space-x-2">
             <User className="text-brand-orange" size={18} />
@@ -67,7 +73,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
         </div>
 
         <div className="p-6 space-y-8 max-w-lg mx-auto w-full pb-24">
-          
+
           <div className="bg-bg-card rounded-[48px] p-8 border border-border-card relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-brand-orange/5 rounded-full blur-[70px] -mr-24 -mt-24" />
 
@@ -126,6 +132,34 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
                </div>
              ))}
           </div>
+
+          <div className="bg-bg-card rounded-[32px] p-6 border border-border-card shadow-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Award className="text-brand-orange" size={16} />
+                <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500">Kitüntetések</h3>
+              </div>
+              <span className="text-[10px] font-black text-brand-orange">{unlockedCount}/{ACHIEVEMENTS.length}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {achievementsWithStatus.map(ach => (
+                <div key={ach.id} className={`flex flex-col items-center p-3 rounded-2xl border transition-all ${ach.hasUnlocked ? 'bg-brand-orange/10 border-brand-orange/30' : 'bg-black/40 border-border-subtle opacity-40'}`}>
+                  <div className={`text-xl mb-1 ${ach.hasUnlocked ? '' : 'grayscale'}`}>
+                    {ach.id === 'first_ride' ? '🚴' : ach.id === '100_km' ? '🏅' : ach.id === '500_km' ? '🔥' : ach.id === '1000_km' ? '👑' : ach.id === 'event_master' ? '📅' : ach.id === 'photo_master' ? '📸' : ach.id === 'chat_legend' ? '💬' : '🛡️'}
+                  </div>
+                  {ach.hasUnlocked && <Check size={10} className="text-brand-orange" />}
+                  <span className="text-[7px] font-black text-center leading-tight mt-0.5 text-white">{ach.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {onToggleTheme && (
+            <button onClick={onToggleTheme} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">
+              {theme === 'dark' ? <Sun size={18} className="text-brand-orange" /> : <Moon size={18} className="text-brand-orange" />}
+              <span className="text-xs font-black text-white uppercase tracking-wider">{theme === 'dark' ? 'Világos Téma' : 'Sötét Téma'}</span>
+            </button>
+          )}
 
           <button onClick={onLogout} className="w-full bg-red-500/5 border border-red-500/10 text-red-500 font-black p-5 rounded-[36px] uppercase tracking-widest text-xs flex items-center justify-center space-x-3 hover:bg-red-500/10 transition-all shadow-xl shadow-red-500/5">
             <LogOut size={18} />

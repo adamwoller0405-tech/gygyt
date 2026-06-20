@@ -4,21 +4,25 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Camera, Loader2, X, ZoomIn } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Camera, Loader2, X, ZoomIn, Flag, Trash2 } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { FeedPost, UserProfile, UserRank, FeedComment } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
+import { useToast } from './Toast';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface FeedSectionProps {
   posts: FeedPost[];
   currentUser: UserProfile;
   onUpdatePosts: (updatedPosts: FeedPost[]) => void;
+  onReport?: (type: 'post' | 'chat' | 'user', id: string) => void;
 }
 
 export const FeedSection: React.FC<FeedSectionProps> = ({
   posts,
   currentUser,
-  onUpdatePosts
+  onUpdatePosts,
+  onReport
 }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all');
   const [showNewPostModal, setShowNewPostModal] = useState(false);
@@ -29,6 +33,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
   const [currentHashFilter, setCurrentHashFilter] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [deleteConfirmPost, setDeleteConfirmPost] = useState<FeedPost | null>(null);
+  const { toast } = useToast();
 
   const isEditor = currentUser.rank === UserRank.ADMIN || currentUser.rank === UserRank.ELITE;
 
@@ -116,6 +122,14 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
     setShowNewPostModal(false);
   };
 
+  const handleDeletePost = () => {
+    if (!deleteConfirmPost) return;
+    const updated = posts.filter(p => p.id !== deleteConfirmPost.id);
+    onUpdatePosts(updated);
+    toast('Bejegyzés törölve!');
+    setDeleteConfirmPost(null);
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-hidden min-h-0">
       
@@ -141,6 +155,14 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                     <p className="text-xs font-black text-white leading-none">{post.authorName}</p>
                     <span className="text-[8px] font-black text-brand-orange tracking-widest uppercase">{post.authorRank}</span>
                   </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {post.authorId === currentUser.id && (
+                    <button onClick={() => setDeleteConfirmPost(post)} className="p-1.5 text-neutral-600 hover:text-red-500 transition-all"><Trash2 size={14} /></button>
+                  )}
+                  {onReport && (
+                    <button onClick={() => onReport('post', post.id)} className="p-1.5 text-neutral-600 hover:text-red-500 transition-all"><Flag size={14} /></button>
+                  )}
                 </div>
               </div>
 
@@ -255,6 +277,15 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
       )}
 
       {lightboxUrl && <ImageViewer url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
+
+      <ConfirmDialog
+        open={deleteConfirmPost !== null}
+        title="Bejegyzés törlése"
+        message="Biztosan törlöd ezt a bejegyzést?"
+        confirmLabel="Törlés"
+        onConfirm={handleDeletePost}
+        onCancel={() => setDeleteConfirmPost(null)}
+      />
 
     </div>
   );

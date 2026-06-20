@@ -9,7 +9,6 @@ const links = [
   { label: 'Facebook', url: 'https://facebook.com/gygyttekeres', icon: '👍', color: 'from-blue-600 to-blue-800' },
   { label: 'Discord', url: 'https://discord.gg/gygyt', icon: '💬', color: 'from-indigo-500 to-indigo-700' },
   { label: 'YouTube', url: 'https://youtube.com/@gygyttekeres', icon: '▶️', color: 'from-red-600 to-red-800' },
-  { label: 'Strava Klub', url: 'https://strava.com/clubs/gygyt', icon: '🏃', color: 'from-orange-600 to-orange-800' },
 ];
 
 export const ContactSection: React.FC = () => {

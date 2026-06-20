@@ -131,3 +131,56 @@ textarea {
   min-height: 100dvh;
 }
 
+/* ── Light Theme ── */
+[data-theme="light"] {
+  --color-bg-deep: #F5F0EB;
+  --color-bg-panel: #FFFFFF;
+  --color-bg-card: #FAFAFA;
+  --color-border-subtle: #E8E0D8;
+  --color-border-card: #DCD4CC;
+  --color-white: #1A1A1A;
+  --color-black: #FFFFFF;
+  --color-neutral-50: #1A1A1A;
+  --color-neutral-100: #222222;
+  --color-neutral-200: #333333;
+  --color-neutral-300: #444444;
+  --color-neutral-400: #666666;
+  --color-neutral-500: #888888;
+  --color-neutral-600: #AAAAAA;
+  --color-neutral-700: #CCCCCC;
+  --color-neutral-800: #E0E0E0;
+  --color-neutral-900: #EEEEEE;
+  --color-neutral-950: #F0F0F0;
+}
+[data-theme="light"] body,
+[data-theme="light"] #root {
+  background-color: #F5F0EB;
+  color: #1A1A1A;
+}
+[data-theme="light"] input,
+[data-theme="light"] textarea {
+  background-color: #F0EDE8 !important;
+  color: #1A1A1A !important;
+  border-color: #DCD4CC !important;
+}
+[data-theme="light"] select {
+  background-color: #F0EDE8 !important;
+  color: #1A1A1A !important;
+}
+
+/* ── Sidebar slide-in ── */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slideOutRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-slide-out-right {
+  animation: slideOutRight 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

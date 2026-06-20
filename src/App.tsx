@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useCallback } from 'react';
 import {
   MessageSquare,
   Calendar,
@@ -14,7 +9,7 @@ import {
   Clock,
   Loader2,
   ShieldX,
-  Link2
+  Menu
 } from 'lucide-react';
 
 import {
@@ -25,8 +20,10 @@ import {
   updateDoc,
   getDoc,
   deleteDoc,
+  addDoc,
   query,
-  orderBy
+  orderBy,
+  where,
 } from 'firebase/firestore';
 import { enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, type User } from 'firebase/auth';
@@ -37,6 +34,9 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { AnnouncementBanner } from './components/AnnouncementBanner';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { ReportDialog } from './components/ReportDialog';
+import { Sidebar } from './components/Sidebar';
+import { SearchBar } from './components/SearchBar';
+import { LeaderboardSection } from './components/LeaderboardSection';
 
 const FeedSection = lazy(() => import('./components/FeedSection').then(m => ({ default: m.FeedSection })));
 const ChatSection = lazy(() => import('./components/ChatSection').then(m => ({ default: m.ChatSection })));
@@ -47,7 +47,7 @@ const PhotoGallery = lazy(() => import('./components/PhotoGallery').then(m => ({
 const CalendarSection = lazy(() => import('./components/CalendarSection').then(m => ({ default: m.CalendarSection })));
 const ContactSection = lazy(() => import('./components/ContactSection').then(m => ({ default: m.ContactSection })));
 
-import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report } from './types';
+import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report, AppNotification } from './types';
 import { DEFAULT_AVATAR } from './lib/defaults';
 import { APP_VERSION } from './lib/version';
 import { ToastProvider, useToast } from './components/Toast';
@@ -67,16 +67,30 @@ function AppContent() {
   const [events, setEvents] = useState<CyclingEvent[]>([]);
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState<'feed' | 'chat' | 'events' | 'calendar' | 'contact' | 'profile' | 'moderation' | 'gallery'>('feed');
+  const [currentTab, setCurrentTab] = useState<'feed' | 'chat' | 'events' | 'calendar' | 'contact' | 'leaderboard' | 'profile' | 'moderation' | 'gallery'>('feed');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'chat' | 'user'; id: string } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
     enableMultiTabIndexedDbPersistence(db).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gygyt_theme');
+    if (saved === 'light' || saved === 'dark') setTheme(saved);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('gygyt_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('gygyt_onboarding_done')) {
@@ -135,10 +149,33 @@ function AppContent() {
       setJoinRequests(snap.docs.map(doc => doc.data() as JoinRequest));
     });
 
+    const unsubNotifs = onSnapshot(
+      query(collection(db, 'notifications'), where('userId', '==', firebaseUser.uid), orderBy('createdAt', 'desc')),
+      (snap) => {
+        setNotifications(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as AppNotification));
+      }
+    );
+
     return () => {
-      unsubUsers(); unsubChats(); unsubPosts(); unsubEvents(); unsubReqs();
+      unsubUsers(); unsubChats(); unsubPosts(); unsubEvents(); unsubReqs(); unsubNotifs();
     };
   }, [firebaseUser]);
+
+  const writeNotification = useCallback(async (type: 'like' | 'comment' | 'event_rsvp', targetUserId: string, fromUserId: string, fromName: string, postId?: string, eventId?: string) => {
+    if (targetUserId === fromUserId) return;
+    try {
+      await addDoc(collection(db, 'notifications'), {
+        userId: targetUserId,
+        type,
+        fromUserId,
+        fromName,
+        postId: postId || null,
+        eventId: eventId || null,
+        read: false,
+        createdAt: new Date().toISOString()
+      });
+    } catch {}
+  }, []);
 
   const handleReport = (type: 'post' | 'chat' | 'user', id: string) => {
     setReportTarget({ type, id });
@@ -179,14 +216,18 @@ function AppContent() {
   };
 
   const activeUser = users.find(u => u.id === firebaseUser?.uid || u.email === firebaseUser?.email);
-
-  // Fallback: if user is authenticated but not in users collection,
-  // check if their join request was approved
   const isApproved = !activeUser && firebaseUser && joinRequests.some(r =>
     r.firebaseUid === firebaseUser.uid && r.status === 'approved'
   );
-
   const isMod = activeUser && (activeUser.rank === UserRank.ADMIN || activeUser.rank === UserRank.ELITE);
+  const unreadNotifs = notifications.filter(n => !n.read).length;
+
+  const markNotifsRead = async () => {
+    const unread = notifications.filter(n => !n.read);
+    for (const n of unread) {
+      try { await updateDoc(doc(db, 'notifications', n.id), { read: true }); } catch {}
+    }
+  };
 
   if (loading) return <div className="flex items-center justify-center h-dynamic bg-bg-deep"><Bike size={48} className="text-brand-orange animate-pulse" /></div>;
   if (!firebaseUser) return <AuthSection onLogin={handleLogin} onRegister={handleRegister} />;
@@ -265,9 +306,24 @@ function AppContent() {
               for (const id of deletedIds) await deleteDoc(doc(db, 'posts', id));
               for (const p of up) {
                 const old = posts.find(op => op.id === p.id);
-                if (!old || JSON.stringify(old) !== JSON.stringify(p)) await setDoc(doc(db, 'posts', p.id), p);
+                if (!old || JSON.stringify(old) !== JSON.stringify(p)) {
+                  await setDoc(doc(db, 'posts', p.id), p);
+                  if (p.likes.length > (old?.likes?.length || 0) && p.authorId !== activeUser.id) {
+                    const newLike = p.likes.find(id => !old?.likes?.includes(id));
+                    if (newLike) {
+                      const fromUser = users.find(u => u.id === newLike);
+                      if (fromUser) writeNotification('like', p.authorId, fromUser.id, fromUser.name, p.id);
+                    }
+                  }
+                  if (p.comments.length > (old?.comments?.length || 0)) {
+                    const newComment = p.comments[p.comments.length - 1];
+                    if (newComment && newComment.authorId !== p.authorId) {
+                      writeNotification('comment', p.authorId, newComment.authorId, newComment.authorName, p.id);
+                    }
+                  }
+                }
               }
-            }} />}
+            }} onReport={handleReport} />}
 
             {currentTab === 'chat' && <ChatSection chats={chats} currentUser={activeUser} users={users} onUpdateChats={async (uc) => {
               const deletedIds = chats.filter(oc => !uc.find(c => c.id === oc.id)).map(c => c.id);
@@ -276,14 +332,21 @@ function AppContent() {
                 const old = chats.find(oc => oc.id === c.id);
                 if (!old || JSON.stringify(old) !== JSON.stringify(c)) await setDoc(doc(db, 'chats', c.id), c);
               }
-            }} />}
+            }} onReport={handleReport} />}
 
             {currentTab === 'events' && <EventsSection events={events} currentUser={activeUser} users={users} onUpdateEvents={async (ue) => {
               const deletedIds = events.filter(oe => !ue.find(e => e.id === oe.id)).map(e => e.id);
               for (const id of deletedIds) await deleteDoc(doc(db, 'events', id));
               for (const e of ue) {
                 const old = events.find(oe => oe.id === e.id);
-                if (!old || JSON.stringify(old) !== JSON.stringify(e)) await setDoc(doc(db, 'events', e.id), e);
+                if (!old || JSON.stringify(old) !== JSON.stringify(e)) {
+                  await setDoc(doc(db, 'events', e.id), e);
+                  const newRsvp = Object.keys(e.rsvps).find(k => !old?.rsvps?.[k]);
+                  if (newRsvp && e.creatorId !== activeUser.id && newRsvp !== activeUser.id) {
+                    const fromUser = users.find(u => u.id === newRsvp);
+                    if (fromUser) writeNotification('event_rsvp', e.creatorId, fromUser.id, fromUser.name, undefined, e.id);
+                  }
+                }
               }
             }} onUserStatsUpdate={async (uid, stats) => {
               await updateDoc(doc(db, 'users', uid), {
@@ -295,7 +358,9 @@ function AppContent() {
 
             {currentTab === 'contact' && <ContactSection />}
 
-            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} />}
+            {currentTab === 'leaderboard' && <LeaderboardSection users={users} currentUser={activeUser} />}
+
+            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />}
 
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 
@@ -328,8 +393,6 @@ function AppContent() {
             { id: 'feed', icon: Compass, label: 'Hírfolyam' },
             { id: 'chat', icon: MessageSquare, label: 'Chat' },
             { id: 'events', icon: Calendar, label: 'Tekerések' },
-            { id: 'contact', icon: Link2, label: 'Kapcsolat' },
-            { id: 'calendar', icon: Clock, label: 'Naptár' },
           ].map(t => (
             <button key={t.id} onClick={() => setCurrentTab(t.id as any)} className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-300 ${currentTab === t.id ? 'text-brand-orange scale-110' : 'text-neutral-600'}`}>
               <t.icon size={22} className="mb-1" />
@@ -344,21 +407,33 @@ function AppContent() {
             <span className="text-[8px] font-black uppercase tracking-tighter">Profil</span>
           </button>
 
-          {isMod && (
-            <button onClick={() => setCurrentTab('moderation')} className={`flex flex-col items-center justify-center flex-1 py-1 transition-all relative ${currentTab === 'moderation' ? 'text-brand-orange scale-110' : 'text-neutral-600'}`}>
-              {joinRequests.filter(r => r.status === 'pending').length > 0 && (
-                <span className="absolute top-1 right-5 bg-red-600 font-black text-[7px] rounded-full text-white h-3.5 w-3.5 flex items-center justify-center border border-black shadow-lg animate-pulse">{joinRequests.filter(r => r.status === 'pending').length}</span>
-              )}
-              <ShieldAlert size={22} className="mb-1" />
-              <span className="text-[8px] font-black uppercase tracking-tighter">Vezérlő</span>
-            </button>
-          )}
+          <button onClick={() => setSidebarOpen(true)} className={`flex flex-col items-center justify-center flex-1 py-1 transition-all relative ${sidebarOpen ? 'text-brand-orange scale-110' : 'text-neutral-600'}`}>
+            {unreadNotifs > 0 && (
+              <span className="absolute top-1 right-4 bg-red-600 font-black text-[7px] rounded-full text-white h-3.5 w-3.5 flex items-center justify-center border border-black shadow-lg animate-pulse">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>
+            )}
+            <Menu size={22} className="mb-1" />
+            <span className="text-[8px] font-black uppercase tracking-tighter">Menü</span>
+          </button>
         </nav>
       </div>
 
       {showOnboarding && <OnboardingOverlay onDone={() => { setShowOnboarding(false); localStorage.setItem('gygyt_onboarding_done', '1'); }} />}
 
       {reportTarget && <ReportDialog targetType={reportTarget.type} targetId={reportTarget.id} reporterId={activeUser?.id || ''} onClose={() => setReportTarget(null)} />}
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onNavigate={(tab) => setCurrentTab(tab as any)}
+        onOpenSearch={() => setSearchOpen(true)}
+        theme={theme}
+        onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+        unreadCount={unreadNotifs}
+        isMod={!!isMod}
+        appVersion={APP_VERSION}
+      />
+
+      {searchOpen && <SearchBar users={users} posts={posts} events={events} onClose={() => setSearchOpen(false)} />}
     </div>
   );
 }
