@@ -35,6 +35,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
   const [currentHashFilter, setCurrentHashFilter] = useState<string | null>(null);
 
+  const isEditor = currentUser.rank === UserRank.ADMIN || currentUser.rank === UserRank.ELITE;
+
   const filteredPosts = posts
     .filter(post => activeTab === 'saved' ? post.isSaved : true)
     .filter(post => currentHashFilter ? post.hashtags.includes(currentHashFilter.toLowerCase()) : true);
@@ -51,6 +53,44 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
         setIsMediaVideo(url.includes('/video/upload/') || url.endsWith('.mp4'));
       }
     } catch (err) { console.error(err); } finally { setIsUploading(false); }
+  };
+
+  const handleLike = (postId: string) => {
+    const updated = posts.map(p => {
+      if (p.id !== postId) return p;
+      const likes = p.likes.includes(currentUser.id)
+        ? p.likes.filter(id => id !== currentUser.id)
+        : [...p.likes, currentUser.id];
+      return { ...p, likes };
+    });
+    onUpdatePosts(updated);
+  };
+
+  const handleComment = (postId: string) => {
+    const text = commentInputs[postId]?.trim();
+    if (!text) return;
+    const comment: FeedComment = {
+      id: `comment_${Date.now()}`,
+      postId,
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      authorAvatar: currentUser.avatarUrl,
+      authorRank: currentUser.rank,
+      content: text,
+      createdAt: new Date().toISOString()
+    };
+    const updated = posts.map(p =>
+      p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
+    );
+    onUpdatePosts(updated);
+    setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+  };
+
+  const handleSave = (postId: string) => {
+    const updated = posts.map(p =>
+      p.id === postId ? { ...p, isSaved: !p.isSaved } : p
+    );
+    onUpdatePosts(updated);
   };
 
   const handleCreatePost = (e: React.FormEvent) => {
@@ -89,7 +129,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
           <button onClick={() => setActiveTab('all')} className={`px-4 py-1.5 rounded-full text-xs font-black transition-all ${activeTab === 'all' ? 'bg-brand-orange text-black' : 'text-neutral-500'}`}>Hírfolyam</button>
           <button onClick={() => setActiveTab('saved')} className={`px-4 py-1.5 rounded-full text-xs font-black transition-all ${activeTab === 'saved' ? 'bg-brand-orange text-black' : 'text-neutral-500'}`}>Mentett</button>
         </div>
-        <button onClick={() => setShowNewPostModal(true)} className="bg-brand-orange/10 p-2 rounded-xl text-brand-orange transition-all active:scale-95"><PlusCircle size={20} /></button>
+        {isEditor && <button onClick={() => setShowNewPostModal(true)} className="bg-brand-orange/10 p-2 rounded-xl text-brand-orange transition-all active:scale-95"><PlusCircle size={20} /></button>}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-24 scroll-smooth">
@@ -125,6 +165,51 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                 <div className="flex flex-wrap gap-2">
                   {post.hashtags.map(h => <span key={h} className="text-[10px] font-black text-brand-orange">#{h}</span>)}
                 </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-border-subtle/50">
+                  <div className="flex items-center space-x-4">
+                    <button onClick={() => handleLike(post.id)} className={`flex items-center space-x-1 transition-all active:scale-90 ${post.likes.includes(currentUser.id) ? 'text-red-500' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                      <Heart size={16} fill={post.likes.includes(currentUser.id) ? 'currentColor' : 'none'} />
+                      <span className="text-[10px] font-black">{post.likes.length || ''}</span>
+                    </button>
+                    <button onClick={() => setCommentInputs(prev => ({ ...prev, [post.id + '_open']: prev[post.id + '_open'] ? '' : 'true' }))} className="flex items-center space-x-1 text-neutral-600 hover:text-neutral-400 transition-all active:scale-90">
+                      <MessageCircle size={16} />
+                      <span className="text-[10px] font-black">{post.comments.length || ''}</span>
+                    </button>
+                  </div>
+                  <button onClick={() => handleSave(post.id)} className={`transition-all active:scale-90 ${post.isSaved ? 'text-brand-orange' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                    <Bookmark size={16} fill={post.isSaved ? 'currentColor' : 'none'} />
+                  </button>
+                </div>
+
+                {(commentInputs[post.id + '_open'] === 'true' || post.comments.length > 0) && (
+                  <div className="space-y-3 pt-1">
+                    {post.comments.map(c => (
+                      <div key={c.id} className="flex items-start space-x-2.5">
+                        <img src={c.authorAvatar} className="w-6 h-6 rounded-full object-cover mt-0.5" alt="" />
+                        <div className="bg-black/40 rounded-2xl px-3 py-2 flex-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[10px] font-black text-white">{c.authorName}</span>
+                            <span className="text-[7px] text-neutral-600 font-black uppercase tracking-wider">{c.authorRank}</span>
+                          </div>
+                          <p className="text-[11px] text-neutral-300 mt-0.5">{c.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center space-x-2">
+                      <input
+                        value={commentInputs[post.id] || ''}
+                        onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleComment(post.id); }}
+                        placeholder="Írj hozzászólást..."
+                        className="flex-1 bg-black border border-border-subtle rounded-2xl px-4 py-2 text-xs text-white placeholder-neutral-700 outline-none focus:border-brand-orange"
+                      />
+                      <button onClick={() => handleComment(post.id)} className="text-brand-orange p-2 active:scale-90 transition-all">
+                        <Send size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </article>
           ))}

@@ -96,6 +96,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
 
   const handleCreateEvent = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEditor) { toast('Nincs jogosultságod eseményt létrehozni!', 'error'); return; }
     if (!title.trim() || !dateTime || !locationName.trim()) return;
 
     const coordsPreset: { [name: string]: { lat: number, lng: number } } = {

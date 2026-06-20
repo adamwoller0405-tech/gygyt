@@ -14,7 +14,6 @@ import {
   LogOut,
   Clock,
   Loader2,
-  Search,
   Image,
   Flag,
   ShieldX
@@ -39,7 +38,6 @@ import { AuthSection } from './components/AuthSection';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AnnouncementBanner } from './components/AnnouncementBanner';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
-import { SearchBar } from './components/SearchBar';
 import { ReportDialog } from './components/ReportDialog';
 
 const FeedSection = lazy(() => import('./components/FeedSection').then(m => ({ default: m.FeedSection })));
@@ -74,7 +72,6 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState<'feed' | 'chat' | 'events' | 'calendar' | 'members' | 'profile' | 'moderation' | 'gallery'>('feed');
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'chat' | 'user'; id: string } | null>(null);
 
   useEffect(() => {
@@ -339,11 +336,6 @@ function AppContent() {
             </button>
           ))}
 
-          <button onClick={() => setShowSearch(true)} className="flex flex-col items-center justify-center flex-1 py-1 text-neutral-600 hover:text-white transition-all">
-            <Search size={22} className="mb-1" />
-            <span className="text-[8px] font-black uppercase tracking-tighter">Kereső</span>
-          </button>
-
           <button onClick={() => setCurrentTab('profile')} className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-300 ${currentTab === 'profile' ? 'text-brand-orange scale-110' : 'text-neutral-600'}`}>
             <div className={`relative mb-1 p-0.5 rounded-full border-2 ${currentTab === 'profile' ? 'border-brand-orange' : 'border-transparent'}`}>
               <img src={activeUser.avatarUrl} className="w-5 h-5 rounded-full object-cover" alt="" />
@@ -364,8 +356,6 @@ function AppContent() {
       </div>
 
       {showOnboarding && <OnboardingOverlay onDone={() => { setShowOnboarding(false); localStorage.setItem('gygyt_onboarding_done', '1'); }} />}
-
-      {showSearch && <SearchBar users={users} posts={posts} events={events} onClose={() => setShowSearch(false)} />}
 
       {reportTarget && <ReportDialog targetType={reportTarget.type} targetId={reportTarget.id} reporterId={activeUser?.id || ''} onClose={() => setReportTarget(null)} />}
     </div>
