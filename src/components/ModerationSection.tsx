@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { ShieldAlert, Check, X, ShieldX, Volume2, VolumeX, UserCheck, Trash2, KeyRound, UserMinus, ShieldCheck, ChevronRight, Award, PlusCircle, Loader2 } from 'lucide-react';
 import { JoinRequest, UserProfile, UserRank } from '../types';
+import { DEFAULT_AVATAR } from '../lib/defaults';
 import { BadgeRenderer } from './BadgeRenderer';
 import { ACHIEVEMENTS } from '../data/mockData';
 import { useToast } from './Toast';
@@ -52,7 +53,7 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
       id: req.firebaseUid || `user_${Date.now()}`,
       email: req.email,
       name: req.name,
-      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+      avatarUrl: DEFAULT_AVATAR,
       rank: UserRank.BRONZE,
       age: req.age,
       school: req.school,

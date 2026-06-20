@@ -51,6 +51,7 @@ const PhotoGallery = lazy(() => import('./components/PhotoGallery').then(m => ({
 const CalendarSection = lazy(() => import('./components/CalendarSection').then(m => ({ default: m.CalendarSection })));
 
 import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report } from './types';
+import { DEFAULT_AVATAR } from './lib/defaults';
 import { ToastProvider, useToast } from './components/Toast';
 
 export default function App() {
@@ -97,7 +98,7 @@ function AppContent() {
             id: user.uid,
             name: user.displayName || 'Admin',
             email: user.email,
-            avatarUrl: user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+            avatarUrl: user.photoURL || DEFAULT_AVATAR,
             rank: UserRank.ADMIN,
             age: 0,
             school: 'GYGYT HQ',

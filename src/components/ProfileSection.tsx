@@ -45,7 +45,11 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
         const response = await fetch(image.webPath);
         const blob = await response.blob();
         const url = await uploadMedia(blob);
-        setEditAvatar(url);
+        if (isEditing) {
+          setEditAvatar(url);
+        } else {
+          onUpdateCurrentUser({ ...currentUser, avatarUrl: url });
+        }
       }
     } catch (err) { console.error(err); } finally { setIsUploading(false); }
   };
@@ -86,7 +90,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             <div className="absolute top-0 right-0 w-48 h-48 bg-brand-orange/5 rounded-full blur-[70px] -mr-24 -mt-24" />
 
             <div className="relative z-10 flex flex-col items-center">
-              <div className="relative mb-6">
+              <div className="relative mb-6 group">
                 <img
                   src={isEditing ? editAvatar : currentUser.avatarUrl}
                   alt=""
@@ -95,15 +99,13 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
                 <div className="absolute -bottom-3 -right-3 drop-shadow-2xl">
                   <BadgeRenderer rank={currentUser.rank} size={64} />
                 </div>
-                {isEditing && (
-                  <button
-                    onClick={handleUploadAvatar}
-                    disabled={isUploading}
-                    className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[44px] cursor-pointer"
-                  >
-                    {isUploading ? <Loader2 className="animate-spin text-white" /> : <Camera className="text-white" size={32} />}
-                  </button>
-                )}
+                <button
+                  onClick={handleUploadAvatar}
+                  disabled={isUploading}
+                  className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-[44px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  {isUploading ? <Loader2 className="animate-spin text-white" size={24} /> : <Camera className="text-white" size={28} />}
+                </button>
               </div>
 
               {isEditing ? (

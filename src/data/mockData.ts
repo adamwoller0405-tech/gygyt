@@ -4,6 +4,7 @@
  */
 
 import { UserProfile, UserRank, CyclingEvent, FeedPost, ChatMessage, JoinRequest, Achievement } from '../types';
+import { DEFAULT_AVATAR } from '../lib/defaults';
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
@@ -68,7 +69,7 @@ export const INITIAL_USERS: UserProfile[] = [
   {
     id: 'user_admin',
     name: 'Admin',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    avatarUrl: DEFAULT_AVATAR,
     rank: UserRank.ADMIN,
     age: 0,
     school: 'GYGYT HQ',
