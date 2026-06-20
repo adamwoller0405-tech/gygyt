@@ -96,7 +96,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
         {filteredPosts.length === 0 ? (
           <div className="text-center py-20 text-neutral-700 font-black uppercase tracking-widest text-xs">Még nincs tartalom</div>
         ) : (
-          filteredPosts.map(post => (
+          <div className="max-w-lg mx-auto w-full space-y-6">
+          {filteredPosts.map(post => (
             <article key={post.id} className="bg-bg-card rounded-[32px] overflow-hidden border border-border-card shadow-2xl animate-fade-in group">
               <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -108,7 +109,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                 </div>
               </div>
 
-              <div className="aspect-square bg-neutral-950 flex items-center justify-center relative overflow-hidden">
+              <div className="aspect-[4/3] bg-neutral-950 flex items-center justify-center relative overflow-hidden rounded-none">
                 {post.mediaType === 'video' ? (
                   <video src={post.mediaUrls[0]} className="w-full h-full object-cover" controls />
                 ) : (
@@ -126,7 +127,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                 </div>
               </div>
             </article>
-          ))
+          ))}
+          </div>
         )}
       </div>
 
