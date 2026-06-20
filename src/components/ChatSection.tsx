@@ -152,6 +152,12 @@ export const ChatSection: React.FC<ChatSectionProps> = ({
             <div className="flex items-start space-x-2">
               {msg.senderId !== currentUser.id && <img src={msg.senderAvatar} className="w-8 h-8 rounded-full object-cover mt-1 border border-white/10" alt="" />}
               <div className="flex flex-col">
+                {msg.senderId !== currentUser.id && (
+                  <div className="flex items-center space-x-1.5 mb-1 ml-1">
+                    <span className="text-xs font-black text-white leading-none">{msg.senderName}</span>
+                    <span className="text-[8px] font-black text-brand-orange uppercase">{msg.senderRank}</span>
+                  </div>
+                )}
                 <div className={`p-3 rounded-2xl text-xs shadow-lg ${msg.senderId === currentUser.id ? 'bg-brand-orange text-black font-extrabold rounded-tr-none' : 'bg-bg-card text-neutral-200 rounded-tl-none border border-border-card'}`}>
                   <p className="break-words leading-relaxed">{msg.content}</p>
 
