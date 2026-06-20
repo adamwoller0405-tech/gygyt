@@ -25,6 +25,7 @@ html, body, #root {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  overscroll-behavior: none;
 }
 
 /* Prevent iOS zoom on input focus - font-size must be >= 16px */
@@ -47,6 +48,12 @@ textarea {
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
+}
+
+/* Bottom nav - extend into safe area */
+.nav-safe-area {
+  height: calc(5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Custom scrollbar helpers for list widgets */
@@ -102,5 +109,15 @@ textarea {
 
 .animate-slide-up {
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dynamic viewport height for mobile Safari */
+.h-dynamic {
+  height: 100vh;
+  height: 100dvh;
+}
+.min-h-dynamic {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 

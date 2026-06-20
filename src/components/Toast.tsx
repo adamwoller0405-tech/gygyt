@@ -35,7 +35,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+      <div className="fixed top-4 left-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none mx-auto">
         {toasts.map(t => {
           const icon = t.type === 'success' ? <CheckCircle size={18} /> : t.type === 'error' ? <XCircle size={18} /> : <AlertTriangle size={18} />;
           const colors = t.type === 'success'

@@ -189,12 +189,12 @@ function AppContent() {
 
   const isMod = activeUser && (activeUser.rank === UserRank.ADMIN || activeUser.rank === UserRank.ELITE);
 
-  if (loading) return <div className="flex items-center justify-center h-screen bg-bg-deep"><Bike size={48} className="text-brand-orange animate-pulse" /></div>;
+  if (loading) return <div className="flex items-center justify-center h-dynamic bg-bg-deep"><Bike size={48} className="text-brand-orange animate-pulse" /></div>;
   if (!firebaseUser) return <AuthSection onLogin={handleLogin} onRegister={handleRegister} />;
 
   if (activeUser?.isBanned) {
     return (
-      <div className="flex-1 bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
+      <div className="flex-1 min-h-dynamic bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
         <div className="relative">
           <ShieldX size={64} className="text-red-500 animate-pulse" />
           <div className="absolute inset-0 bg-red-500/20 blur-2xl rounded-full" />
@@ -216,7 +216,7 @@ function AppContent() {
   if (!activeUser) {
     if (isApproved) {
       return (
-        <div className="flex-1 bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
+        <div className="flex-1 min-h-dynamic bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
           <div className="relative">
             <Loader2 size={64} className="text-brand-orange animate-spin" />
             <div className="absolute inset-0 bg-brand-orange/20 blur-2xl rounded-full" />
@@ -235,7 +235,7 @@ function AppContent() {
       );
     }
     return (
-      <div className="flex-1 bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
+      <div className="flex-1 min-h-dynamic bg-bg-deep flex flex-col items-center justify-center p-8 text-center animate-fade-in space-y-8">
         <div className="relative">
           <Clock size={64} className="text-brand-orange animate-spin-slow" />
           <div className="absolute inset-0 bg-brand-orange/20 blur-2xl rounded-full" />
@@ -255,7 +255,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-bg-deep text-neutral-100 overflow-hidden font-sans select-none">
+    <div className="flex flex-col h-dynamic w-full bg-bg-deep text-neutral-100 overflow-hidden font-sans">
       <OfflineBanner />
       <AnnouncementBanner />
       <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -320,7 +320,7 @@ function AppContent() {
           </Suspense>
         </div>
 
-        <nav className="h-20 bg-bg-panel border-t border-border-subtle flex items-center justify-around px-4 pb-4 relative z-30 shadow-2xl safe-bottom">
+        <nav className="h-20 nav-safe-area bg-bg-panel border-t border-border-subtle flex items-center justify-around px-4 pb-4 relative z-30 shadow-2xl">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/5 text-[7px] text-neutral-600 font-black tracking-widest uppercase">
             GYGYT Live v2.2.0
           </div>

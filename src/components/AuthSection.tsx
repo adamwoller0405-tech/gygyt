@@ -36,7 +36,7 @@ export const AuthSection: React.FC<AuthSectionProps> = ({ onLogin, onRegister })
   };
 
   return (
-    <div className="flex-1 bg-bg-deep flex flex-col items-center justify-center p-6 animate-fade-in overflow-y-auto">
+    <div className="flex-1 min-h-dynamic bg-bg-deep flex flex-col items-center justify-center p-6 animate-fade-in overflow-y-auto">
       <div className="max-w-sm w-full space-y-8">
         <div className="text-center space-y-3">
           <div className="w-20 h-20 bg-brand-orange/10 rounded-[32px] flex items-center justify-center mx-auto text-brand-orange border border-brand-orange/20 shadow-2xl animate-bounce">
