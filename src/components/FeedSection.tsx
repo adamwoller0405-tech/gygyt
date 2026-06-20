@@ -82,7 +82,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-hidden min-h-0">
       
       <div className="px-5 py-4 bg-bg-panel border-b border-border-subtle flex items-center justify-between shadow-lg z-20">
         <div className="flex space-x-3">

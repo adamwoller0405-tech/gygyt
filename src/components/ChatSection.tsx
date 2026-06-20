@@ -136,7 +136,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({
   const currentChatMessages = chats.filter(c => c.channelId === activeChannel);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-bg-deep animate-fade-in overflow-hidden min-h-0">
       <div className="bg-bg-panel border-b border-border-subtle p-2 overflow-x-auto flex space-x-1.5 scrollbar-none">
         {channelInfo.map(ch => (
           <button key={ch.id} onClick={() => setActiveChannel(ch.id)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 whitespace-nowrap ${activeChannel === ch.id ? 'bg-brand-orange text-black' : 'text-neutral-400 hover:text-white'}`}>

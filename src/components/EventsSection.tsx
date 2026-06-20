@@ -185,7 +185,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-bg-deep animate-fade-in">
+    <div className="flex flex-col h-full bg-bg-deep animate-fade-in min-h-0">
       
       <div className="bg-bg-panel px-4 py-3 border-b border-border-subtle sticky top-0 z-20 flex items-center justify-between shadow-lg">
         <div className="flex items-center space-x-2">

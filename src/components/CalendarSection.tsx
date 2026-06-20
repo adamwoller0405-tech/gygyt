@@ -39,7 +39,7 @@ export const CalendarSection: React.FC<Props> = ({ events }) => {
   const nextMonth = () => { setDate(new Date(year, month + 1, 1)); setSelectedDay(null); };
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-deep animate-fade-in overflow-y-auto">
+    <div className="flex-1 flex flex-col bg-bg-deep animate-fade-in overflow-y-auto min-h-0">
       <div className="px-5 py-4 bg-bg-panel border-b border-border-subtle sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-white/5 transition-colors"><ChevronLeft size={18} className="text-neutral-400" /></button>
@@ -70,7 +70,7 @@ export const CalendarSection: React.FC<Props> = ({ events }) => {
               <button
                 key={day}
                 onClick={() => setSelectedDay(isSelected ? null : day)}
-                className={`relative aspect-square rounded-2xl flex items-center justify-center text-xs font-bold transition-all ${
+                className={`relative h-10 sm:h-12 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
                   isSelected
                     ? 'bg-brand-orange text-black shadow-lg'
                     : isToday

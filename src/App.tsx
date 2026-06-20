@@ -258,8 +258,8 @@ function AppContent() {
     <div className="flex flex-col h-dynamic w-full bg-bg-deep text-neutral-100 overflow-hidden font-sans">
       <OfflineBanner />
       <AnnouncementBanner />
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        <div className="flex-1 overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-h-0 relative">
+        <div className="flex-1 min-h-0 relative">
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 size={32} className="text-brand-orange animate-spin" /></div>}>
             {currentTab === 'feed' && <FeedSection posts={posts} currentUser={activeUser} onUpdatePosts={async (up) => {
               const deletedIds = posts.filter(op => !up.find(p => p.id === op.id)).map(p => p.id);
