@@ -1,0 +1,6 @@
+{
+  "name": "GYGYT",
+  "description": "A GYGYT (Gyogyós Gyerekek Társasága) privát kerékpáros közösség zártkörű platformja. Csevegés, hírfolyam, események és rangok egy helyen.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
