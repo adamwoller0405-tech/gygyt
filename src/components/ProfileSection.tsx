@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2, Ban } from 'lucide-react';
+import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2, Ban, Mail } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { UserProfile, CyclingEvent } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -14,6 +14,7 @@ interface ProfileSectionProps {
   onDeleteAccount?: () => void;
   theme?: 'dark' | 'light';
   onToggleTheme?: () => void;
+  onToggleEmailNotifs?: () => void;
 }
 
 export const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -305,6 +306,11 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
               <span className="text-xs font-black text-white uppercase tracking-wider">{theme === 'dark' ? 'Világos Téma' : 'Sötét Téma'}</span>
             </button>
           )}
+
+          <button onClick={onToggleEmailNotifs} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">
+            <Mail size={18} className="text-brand-orange" />
+            <span className="text-xs font-black text-white uppercase tracking-wider">{currentUser.emailNotifs ? 'Email értesítések BE' : 'Email értesítések KI'}</span>
+          </button>
 
           {onDeleteAccount && (
             <button onClick={onDeleteAccount} className="w-full bg-red-500/5 border border-red-500/10 text-red-400 font-black p-5 rounded-[36px] uppercase tracking-widest text-xs flex items-center justify-center space-x-3 hover:bg-red-500/10 transition-all shadow-xl shadow-red-500/5">

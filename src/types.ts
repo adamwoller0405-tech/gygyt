@@ -34,6 +34,7 @@ export interface UserProfile {
   following?: string[];
   modNote?: string;
   warnings?: { reason: string; date: string; warnedBy: string }[];
+  emailNotifs?: boolean;
 }
 
 export interface JoinRequest {
@@ -153,6 +154,16 @@ export interface Report {
   description: string;
   createdAt: string;
   status: 'pending' | 'resolved' | 'dismissed';
+}
+
+export interface Story {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  mediaUrl: string;
+  timestamp: string;
+  viewedBy: string[];
 }
 
 export interface AppNotification {

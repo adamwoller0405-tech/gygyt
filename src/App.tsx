@@ -38,6 +38,7 @@ import { ReportDialog } from './components/ReportDialog';
 import { BugReportDialog } from './components/BugReportDialog';
 import { Sidebar } from './components/Sidebar';
 import { SearchBar } from './components/SearchBar';
+import { StoriesBar } from './components/StoriesBar';
 import { LeaderboardSection } from './components/LeaderboardSection';
 
 const FeedSection = lazy(() => import('./components/FeedSection').then(m => ({ default: m.FeedSection })));
@@ -49,7 +50,7 @@ const PhotoGallery = lazy(() => import('./components/PhotoGallery').then(m => ({
 const CalendarSection = lazy(() => import('./components/CalendarSection').then(m => ({ default: m.CalendarSection })));
 const ContactSection = lazy(() => import('./components/ContactSection').then(m => ({ default: m.ContactSection })));
 
-import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report, AppNotification, Achievement } from './types';
+import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report, AppNotification, Achievement, Story } from './types';
 import { DEFAULT_AVATAR } from './lib/defaults';
 import { APP_VERSION } from './lib/version';
 import { ToastProvider, useToast } from './components/Toast';
@@ -70,6 +71,7 @@ function AppContent() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
 
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -358,7 +360,12 @@ function AppContent() {
       <div className="flex-1 flex flex-col min-h-0 relative">
         <div className="flex-1 min-h-0 relative">
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 size={32} className="text-brand-orange animate-spin" /></div>}>
-            {currentTab === 'feed' && <FeedSection posts={filteredPosts} users={users} currentUser={activeUser} onUpdatePosts={async (up) => {
+            {currentTab === 'feed' && <><StoriesBar stories={stories} currentUserId={activeUser.id} isEditor={true} onAddStory={() => {
+              const url = prompt('Story kép URL:');
+              if (!url?.trim()) return;
+              const newStory: Story = { id: `story_${Date.now()}`, userId: activeUser.id, userName: activeUser.name, userAvatar: activeUser.avatarUrl, mediaUrl: url.trim(), timestamp: new Date().toISOString(), viewedBy: [] };
+              setStories([...stories, newStory]);
+            }} onUpdateStories={setStories} /><FeedSection posts={filteredPosts} users={users} currentUser={activeUser} onUpdatePosts={async (up) => {
               const deletedIds = posts.filter(op => !up.find(p => p.id === op.id)).map(p => p.id);
               for (const id of deletedIds) await deleteDoc(doc(db, 'posts', id));
               for (const p of up) {
@@ -380,7 +387,7 @@ function AppContent() {
                   }
                 }
               }
-            }} onReport={handleReport} />}
+            }} onReport={handleReport} /></>}
 
             {currentTab === 'chat' && <ChatSection chats={chats} currentUser={activeUser} users={users} onUpdateChats={async (uc) => {
               const deletedIds = chats.filter(oc => !uc.find(c => c.id === oc.id)).map(c => c.id);
@@ -428,7 +435,7 @@ function AppContent() {
 
             {currentTab === 'leaderboard' && <LeaderboardSection users={users} currentUser={activeUser} />}
 
-            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} events={events} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} onDeleteAccount={handleDeleteAccount} />}
+            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} events={events} onUpdateCurrentUser={async (u) => { await setDoc(doc(db, 'users', u.id), u); setUsers(prev => prev.map(p => p.id === u.id ? u : p)); }} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} onDeleteAccount={handleDeleteAccount} onToggleEmailNotifs={async () => { const updated = { ...activeUser, emailNotifs: !activeUser.emailNotifs }; await setDoc(doc(db, 'users', activeUser.id), updated); setActiveUser(updated); }} />}
 
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 
@@ -446,6 +453,18 @@ function AppContent() {
                   await setDoc(doc(db, 'users', u.id), u);
                 }
               }
+            }} onUpdateEvents={async (eList) => {
+              for (const e of eList) {
+                const old = events.find(oe => oe.id === e.id);
+                if (!old || JSON.stringify(old) !== JSON.stringify(e)) await setDoc(doc(db, 'events', e.id), e);
+              }
+              setEvents(eList);
+            }} onUpdatePosts={async (pList) => {
+              for (const p of pList) {
+                const old = posts.find(op => op.id === p.id);
+                if (!old || JSON.stringify(old) !== JSON.stringify(p)) await setDoc(doc(db, 'posts', p.id), p);
+              }
+              setPosts(pList);
             }} onDeleteUser={async (userId) => {
               await deleteDoc(doc(db, 'users', userId));
             }} />}

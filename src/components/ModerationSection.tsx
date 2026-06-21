@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Check, X, ShieldX, Volume2, VolumeX, UserCheck, Trash2, ShieldCheck, ChevronRight, Award, PlusCircle, Loader2, Key, Save, Search, Users, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Check, X, ShieldX, Volume2, VolumeX, UserCheck, Trash2, ShieldCheck, ChevronRight, Award, PlusCircle, Loader2, Key, Save, Search, Users, AlertTriangle, Upload } from 'lucide-react';
 import { JoinRequest, UserProfile, UserRank } from '../types';
 import { DEFAULT_AVATAR } from '../lib/defaults';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -18,6 +18,8 @@ interface ModerationSectionProps {
   currentUser: UserProfile;
   onUpdateJoinRequests: (updated: JoinRequest[]) => void;
   onUpdateUsers: (updated: UserProfile[]) => void;
+  onUpdateEvents?: (updated: any[]) => void;
+  onUpdatePosts?: (updated: any[]) => void;
   onDeleteUser?: (userId: string) => void;
 }
 
@@ -491,6 +493,42 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
                 <p className="text-xl font-black text-yellow-500">{pendingReqsCount}</p>
                 <p className="text-[8px] font-black uppercase text-neutral-500">Függőben</p>
               </div>
+            </div>
+          </div>
+
+          {/* Backup / Restore */}
+          <div className="bg-bg-card rounded-2xl border border-border-card p-4 space-y-3">
+            <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500 mb-3">Adat Biztonsági Mentés</h3>
+            <div className="flex gap-3">
+              <button onClick={() => {
+                const data = { users, events, posts, chats, joinRequests, exportedAt: new Date().toISOString() };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `gygyt_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click(); URL.revokeObjectURL(url);
+                toast('Adatok exportálva!');
+              }} className="flex-1 p-3 rounded-2xl border border-green-500/20 bg-green-500/5 text-green-400 text-[9px] font-black uppercase tracking-widest hover:bg-green-500/10 transition-all flex items-center justify-center space-x-2">
+                <Save size={14} /><span>Export</span>
+              </button>
+              <label className="flex-1 p-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 text-blue-400 text-[9px] font-black uppercase tracking-widest hover:bg-blue-500/10 transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                <Upload size={14} /><span>Import</span>
+                <input type="file" accept=".json" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    try {
+                      const data = JSON.parse(ev.target?.result as string);
+                      if (data.users && Array.isArray(data.users)) onUpdateUsers(data.users);
+                      if (data.events && Array.isArray(data.events)) onUpdateEvents?.(data.events);
+                      if (data.posts && Array.isArray(data.posts)) onUpdatePosts?.(data.posts);
+                      if (data.joinRequests && Array.isArray(data.joinRequests)) onUpdateJoinRequests(data.joinRequests);
+                      toast('Adatok visszaállítva!');
+                    } catch { toast('Hibás fájl!', 'error'); }
+                  }; reader.readAsText(file);
+                  e.target.value = '';
+                }} />
+              </label>
             </div>
           </div>
         </div>
