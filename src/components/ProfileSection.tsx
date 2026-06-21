@@ -156,6 +156,49 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
              })()}
           </div>
 
+          {/* Following count */}
+          <div className="bg-bg-card rounded-[32px] p-5 border border-border-card shadow-lg flex items-center justify-around">
+            <div className="text-center">
+              <p className="text-lg font-black text-white">{(currentUser.following || []).length}</p>
+              <p className="text-[7px] font-black text-neutral-500 uppercase tracking-widest">Követve</p>
+            </div>
+            <div className="w-px h-10 bg-border-subtle" />
+            <div className="text-center">
+              <p className="text-lg font-black text-white">{users.filter(u => u.following?.includes(currentUser.id)).length}</p>
+              <p className="text-[7px] font-black text-neutral-500 uppercase tracking-widest">Követő</p>
+            </div>
+          </div>
+
+          {(currentUser.following?.length || 0) > 0 && (
+            <details className="w-full bg-bg-card border border-border-card rounded-[36px] overflow-hidden shadow-xl">
+              <summary className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all">
+                <div className="flex items-center space-x-3">
+                  <UserCheck size={16} className="text-brand-orange" />
+                  <span className="text-xs font-black text-white uppercase tracking-wider">Követett tagok ({(currentUser.following || []).length})</span>
+                </div>
+                <span className="text-neutral-600 text-xs">+</span>
+              </summary>
+              <div className="px-5 pb-5 space-y-2">
+                {(currentUser.following || []).map(fid => {
+                  const fUser = users.find(u => u.id === fid);
+                  if (!fUser) return null;
+                  return (
+                    <div key={fid} className="flex items-center justify-between bg-black/40 rounded-2xl p-3">
+                      <div className="flex items-center space-x-2">
+                        <img src={fUser.avatarUrl} className="w-6 h-6 rounded-full object-cover" alt="" />
+                        <span className="text-xs font-bold text-neutral-300">{fUser.name}</span>
+                      </div>
+                      <button onClick={() => {
+                        const updated = { ...currentUser, following: (currentUser.following || []).filter(id => id !== fid) };
+                        onUpdateCurrentUser(updated);
+                      }} className="text-[9px] font-black text-neutral-500 bg-neutral-800 px-3 py-1 rounded-full hover:text-white transition-all">Követés vége</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          )}
+
           <div className="bg-bg-card rounded-[32px] p-6 border border-border-card shadow-lg space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">

@@ -389,7 +389,13 @@ function AppContent() {
                 const old = chats.find(oc => oc.id === c.id);
                 if (!old || JSON.stringify(old) !== JSON.stringify(c)) await setDoc(doc(db, 'chats', c.id), c);
               }
-            }} onReport={handleReport} onBlockUser={handleBlockUser} onUserTyping={async (chId, typing) => {
+            }} onReport={handleReport} onBlockUser={handleBlockUser} onToggleFollow={async (targetId) => {
+              if (!activeUser) return;
+              const following = activeUser.following || [];
+              const updated = following.includes(targetId) ? following.filter(id => id !== targetId) : [...following, targetId];
+              await setDoc(doc(db, 'users', activeUser.id), { following: updated }, { merge: true });
+              toast(updated.includes(targetId) ? 'Felhasználó követve' : 'Követés leállítva');
+            }} onUserTyping={async (chId, typing) => {
               if (!activeUser) return;
               await setDoc(doc(db, 'users', activeUser.id), {
                 typingIn: typing ? { channelId: chId, lastTypedAt: new Date().toISOString() } : null

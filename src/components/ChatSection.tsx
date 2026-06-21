@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Hash, Send, Camera, Loader2, Flag, Trash2, Edit3, Smile, MessageSquare, ChevronLeft, Users, Search, X, RotateCcw, Filter, Ban } from 'lucide-react';
+import { Hash, Send, Camera, Loader2, Flag, Trash2, Edit3, Smile, MessageSquare, ChevronLeft, Users, Search, X, RotateCcw, Filter, Ban, UserCheck } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { ChatMessage, UserProfile, UserRank } from '../types';
 import { useToast } from './Toast';
 import { checkRateLimit } from '../lib/rateLimit';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PullToRefresh } from './PullToRefresh';
+import { GifPicker } from './GifPicker';
 
 interface ChatSectionProps {
   chats: ChatMessage[];
@@ -14,6 +15,7 @@ interface ChatSectionProps {
   onUpdateChats: (updatedChats: ChatMessage[]) => void;
   onReport?: (type: 'post' | 'chat' | 'user', id: string) => void;
   onBlockUser?: (userId: string, userName: string) => void;
+  onToggleFollow?: (userId: string) => void;
   onUserTyping?: (channelId: string, isTyping: boolean) => void;
 }
 
@@ -35,7 +37,7 @@ const canAccessChannel = (rank: UserRank, channelId: string) => {
   return false;
 };
 
-export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, users, onUpdateChats, onReport, onBlockUser, onUserTyping }) => {
+export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, users, onUpdateChats, onReport, onBlockUser, onToggleFollow, onUserTyping }) => {
   const { toast } = useToast();
   const [activeChannel, setActiveChannel] = useState('global');
   const [messageText, setMessageText] = useState('');
@@ -51,6 +53,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
   const [dmSearch, setDmSearch] = useState('');
   const [undoMsgId, setUndoMsgId] = useState<string | null>(null);
   const [undoTimer, setUndoTimer] = useState<number>(5);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState('');
   const [swipedMsgId, setSwipedMsgId] = useState<string | null>(null);
@@ -508,8 +511,13 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                         LÁTVA
                       </span>
                     )}
+                    {!isOwn && !isDeleted && onToggleFollow && (
+                      <button onClick={() => onToggleFollow(msg.senderId)} className="text-neutral-700 hover:text-blue-400 transition-all opacity-0 group-hover:opacity-100" aria-label={currentUser.following?.includes(msg.senderId) ? 'Követés leállítása' : 'Követés'}>
+                        <UserCheck size={10} />
+                      </button>
+                    )}
                     {!isOwn && !isDeleted && onBlockUser && (
-                      <button onClick={() => onBlockUser(msg.senderId, msg.senderName)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100" aria-label="Letiltás"><Ban size={10} aria-hidden="true" /></button>
+                      <button onClick={() => onBlockUser(msg.senderId, msg.senderName)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Ban size={10} /></button>
                     )}
                     {onReport && !isDeleted && (
                       <button onClick={() => onReport('chat', msg.id)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100" aria-label="Jelentés"><Flag size={10} aria-hidden="true" /></button>
@@ -575,6 +583,25 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
           </div>
         )}
 
+        {showGifPicker && <GifPicker onSelect={(url) => {
+          if (currentUser.isMuted) { toast('Néma üzemmódban vagy!', 'warning'); setShowGifPicker(false); return; }
+          const newMessage: ChatMessage = {
+            id: `message_${Date.now()}`,
+            channelId: activeChannel,
+            senderId: currentUser.id,
+            senderName: currentUser.name,
+            senderRank: currentUser.rank,
+            senderAvatar: currentUser.avatarUrl,
+            content: '',
+            imageUrl: url,
+            timestamp: new Date().toISOString(),
+            reactions: {},
+            readBy: [currentUser.id]
+          };
+          onUpdateChats([...chats, newMessage]);
+          setShowGifPicker(false);
+        }} onClose={() => setShowGifPicker(false)} />}
+
         <div className="p-3 bg-bg-panel border-t border-border-subtle relative">
           {mentionQuery && mentionUsers.length > 0 && (
             <div className="absolute bottom-full left-3 right-3 mb-1 bg-bg-card border border-border-subtle rounded-2xl shadow-2xl overflow-hidden max-h-36 overflow-y-auto z-10">
@@ -594,6 +621,9 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
             </div>
           )}
           <form onSubmit={handleSendMessage} className="flex items-center space-x-2 max-w-2xl mx-auto">
+            <button type="button" onClick={() => setShowGifPicker(true)} className="p-2.5 bg-black text-purple-500 rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center text-[9px] font-black" aria-label="GIF">
+              GIF
+            </button>
             <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center" aria-label="Emoji">
               <Smile size={18} aria-hidden="true" />
             </button>

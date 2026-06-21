@@ -31,6 +31,7 @@ export interface UserProfile {
   flair?: string;
   blockedUsers?: string[];
   typingIn?: { channelId: string; lastTypedAt: string };
+  following?: string[];
   modNote?: string;
   warnings?: { reason: string; date: string; warnedBy: string }[];
 }
@@ -86,7 +87,11 @@ export interface CyclingEvent {
   };
   photos?: string[]; // Media uploaded after event
   maxParticipants?: number;
-  checkIns?: { [userId: string]: string }; // userId → ISO timestamp of check-in
+  checkIns?: { [userId: string]: string };
+  polls?: {
+    question: string;
+    options: { text: string; votes: string[] }[];
+  };
 }
 
 export interface FeedPost {

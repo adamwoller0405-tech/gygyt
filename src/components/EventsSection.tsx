@@ -40,6 +40,9 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+  const [showPollBuilder, setShowPollBuilder] = useState(false);
 
   const handleRefresh = async () => {
     await new Promise(r => setTimeout(r, 500));
@@ -93,6 +96,12 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
     if (!isEditor) { toast('Nincs jogosultságod eseményt létrehozni!', 'error'); return; }
     if (!title.trim() || !dateTime || !locationName.trim()) return;
 
+    const validPollOptions = pollOptions.filter(o => o.trim());
+    const poll = showPollBuilder && pollQuestion.trim() && validPollOptions.length >= 2 ? {
+      question: pollQuestion.trim(),
+      options: validPollOptions.map(text => ({ text, votes: [] }))
+    } : undefined;
+
     const newEvent: CyclingEvent = {
       id: `event_${Date.now()}`,
       title,
@@ -106,7 +115,8 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
       rsvps: {
         [currentUser.id]: 'going'
       },
-      maxParticipants: maxParticipants > 0 ? maxParticipants : undefined
+      maxParticipants: maxParticipants > 0 ? maxParticipants : undefined,
+      polls: poll ? [poll] : undefined
     };
 
     onUpdateEvents([...events, newEvent]);
@@ -116,6 +126,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
     setDateTime('');
     setLocationName('');
     setMaxParticipants(0);
+    setPollQuestion(''); setPollOptions(['', '']); setShowPollBuilder(false);
     ['draft_event_title', 'draft_event_desc', 'draft_event_date', 'draft_event_location'].forEach(k => localStorage.removeItem(k));
   };
 
@@ -269,6 +280,53 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                       "{ev.description}"
                     </p>
                   )}
+
+                  {/* Poll */}
+                  {ev.polls?.map((poll, pi) => {
+                    const totalVotes = poll.options.reduce((s, o) => s + o.votes.length, 0);
+                    return (
+                      <div key={pi} className="bg-black/40 rounded-3xl p-4 border border-border-subtle/50 space-y-3">
+                        <p className="text-[11px] font-black text-white">{poll.question}</p>
+                        <div className="space-y-2">
+                          {poll.options.map((opt, oi) => {
+                            const pct = totalVotes > 0 ? Math.round((opt.votes.length / totalVotes) * 100) : 0;
+                            const hasVoted = opt.votes.includes(currentUser.id);
+                            return (
+                              <button key={oi} onClick={() => {
+                                if (hasVoted) return;
+                                const updated = events.map(e => {
+                                  if (e.id !== ev.id) return e;
+                                  const newPolls = e.polls?.map((p, idx) => {
+                                    if (idx !== pi) return p;
+                                    return {
+                                      ...p,
+                                      options: p.options.map((o, oidx) => ({
+                                        ...o,
+                                        votes: oidx === oi ? [...o.votes, currentUser.id] : o.votes.filter(v => v !== currentUser.id)
+                                      }))
+                                    };
+                                  });
+                                  return { ...e, polls: newPolls };
+                                });
+                                onUpdateEvents(updated);
+                              }} disabled={hasVoted}
+                                className={`w-full p-3 rounded-2xl border text-left transition-all ${hasVoted ? 'bg-brand-orange/10 border-brand-orange/30' : 'bg-black border-border-subtle hover:border-neutral-600'}`}>
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-[10px] font-bold text-neutral-200">{opt.text}</span>
+                                  <span className="text-[9px] font-black text-neutral-500">{pct}%</span>
+                                </div>
+                                <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                                  <div className="h-full bg-brand-orange rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className="text-[7px] text-neutral-600 mt-1 block">{opt.votes.length} szavazat</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[7px] text-neutral-600 text-center">{totalVotes} szavazat összesen</p>
+                      </div>
+                    );
+                  })}
 
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="bg-black/50 p-3 rounded-2xl border border-border-subtle flex items-center space-x-3 shadow-inner">
@@ -473,6 +531,34 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                     onChange={(e) => { setDescription(e.target.value); localStorage.setItem('draft_event_desc', e.target.value); }}
                     className="w-full bg-black border border-border-subtle rounded-2xl p-4 text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all"
                   />
+              </div>
+
+              {/* Poll Builder */}
+              <div className="space-y-2">
+                <button type="button" onClick={() => setShowPollBuilder(!showPollBuilder)} className={`w-full p-3 rounded-2xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center space-x-2 transition-all ${showPollBuilder ? 'bg-brand-orange/10 border-brand-orange/30 text-brand-orange' : 'bg-black border-border-subtle text-neutral-500 hover:text-neutral-300'}`}>
+                  <span>{showPollBuilder ? '−' : '+'}</span>
+                  <span>Szavazás hozzáadása</span>
+                </button>
+                {showPollBuilder && (
+                  <div className="bg-black/40 rounded-2xl p-3 space-y-2 border border-border-subtle animate-fade-in">
+                    <input type="text" value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="Szavazás kérdése..."
+                      className="w-full bg-black border border-border-subtle rounded-xl px-3 py-2 text-[10px] text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange" />
+                    {pollOptions.map((opt, i) => (
+                      <div key={i} className="flex items-center space-x-2">
+                        <input type="text" value={opt} onChange={(e) => {
+                          const next = [...pollOptions]; next[i] = e.target.value; setPollOptions(next);
+                        }} placeholder={`Opció ${i + 1}...`}
+                          className="flex-1 bg-black border border-border-subtle rounded-xl px-3 py-2 text-[10px] text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange" />
+                        {pollOptions.length > 2 && (
+                          <button type="button" onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-red-500 p-1" aria-label="Opció eltávolítása">✕</button>
+                        )}
+                      </div>
+                    ))}
+                    {pollOptions.length < 6 && (
+                      <button type="button" onClick={() => setPollOptions([...pollOptions, ''])} className="text-[9px] text-neutral-500 font-black hover:text-neutral-300 transition-colors">+ Opció hozzáadása</button>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
