@@ -4,6 +4,7 @@ import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { ChatMessage, UserProfile, UserRank } from '../types';
 import { useToast } from './Toast';
 import { ConfirmDialog } from './ConfirmDialog';
+import { PullToRefresh } from './PullToRefresh';
 
 interface ChatSectionProps {
   chats: ChatMessage[];
@@ -49,6 +50,8 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
   const [undoTimer, setUndoTimer] = useState<number>(5);
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState('');
+  const [swipedMsgId, setSwipedMsgId] = useState<string | null>(null);
+  const swipeTouchStart = useRef<{ x: number; y: number; msgId: string } | null>(null);
   const undoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -217,6 +220,10 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
     );
   }, [chats, activeChannel, chatSearchQuery]);
 
+  const handleRefresh = async () => {
+    await new Promise(r => setTimeout(r, 500));
+  };
+
   const currentChannelName = CHANNELS.find(ch => ch.id === activeChannel)?.name || (activeChannel.startsWith('dm_') ? getDmPartner(activeChannel)?.name || 'Ismeretlen' : 'Csevegés');
 
   const nonDmUsers = users.filter(u => u.id !== currentUser.id && u.rank !== UserRank.ADMIN && !u.isBanned);
@@ -374,7 +381,8 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-3.5 space-y-4 scroll-smooth max-w-2xl mx-auto w-full" ref={scrollRef}>
+        <PullToRefresh onRefresh={handleRefresh} containerRef={scrollRef}>
+          <div className="p-3.5 space-y-4 scroll-smooth max-w-2xl mx-auto w-full" onClick={() => setSwipedMsgId(null)}>
           {currentChatMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-neutral-600">
               <MessageSquare size={40} className="mb-3 text-neutral-800" />
@@ -385,8 +393,39 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
             currentChatMessages.map(msg => {
               const isOwn = msg.senderId === currentUser.id;
               const isDeleted = msg.isDeleted;
+              const isSwiped = swipedMsgId === msg.id;
               return (
-                <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} group max-w-[85%] ${isOwn ? 'ml-auto' : 'mr-auto'} animate-fade-in`}>
+                <div key={msg.id}
+                  className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'} items-stretch overflow-hidden ${isOwn ? 'ml-auto' : 'mr-auto'} animate-fade-in`}
+                  style={{ maxWidth: isSwiped ? '100%' : '85%' }}
+                  onTouchStart={(e) => {
+                    if (msg.isDeleted || msg.senderId !== currentUser.id) return;
+                    const touch = e.touches[0];
+                    swipeTouchStart.current = { x: touch.clientX, y: touch.clientY, msgId: msg.id };
+                  }}
+                  onTouchMove={(e) => {
+                    if (!swipeTouchStart.current || swipeTouchStart.current.msgId !== msg.id) return;
+                    const touch = e.touches[0];
+                    const dx = swipeTouchStart.current.x - touch.clientX;
+                    const dy = Math.abs(swipeTouchStart.current.y - touch.clientY);
+                    if (dx > 20 && dy < dx) {
+                      e.preventDefault();
+                      if (dx > 80) setSwipedMsgId(msg.id);
+                    }
+                  }}
+                  onTouchEnd={() => {
+                    if (swipeTouchStart.current?.msgId === msg.id) swipeTouchStart.current = null;
+                  }}
+                >
+                  {isSwiped && isOwn && !isDeleted && (
+                    <button
+                      onClick={() => setDeleteConfirmMsg(msg)}
+                      className="flex-shrink-0 bg-red-600 text-white flex items-center justify-center px-6 text-[9px] font-black uppercase tracking-wider rounded-2xl ml-2 active:scale-95"
+                    >
+                      Törlés
+                    </button>
+                  )}
+                  <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} group max-w-full flex-1 min-w-0`}>
                   <div className="flex items-start space-x-2 w-full">
                     {!isOwn && <img src={msg.senderAvatar} className="w-7 h-7 rounded-full object-cover mt-1 border border-white/10 shrink-0" alt="" />}
                     <div className="flex flex-col min-w-0 w-full">
@@ -462,11 +501,13 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                       <button onClick={() => onReport('chat', msg.id)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Flag size={10} /></button>
                     )}
                   </div>
+                  </div>
                 </div>
               );
             })
           )}
-        </div>
+          </div>
+        </PullToRefresh>
 
         {/* Reply preview */}
         {replyMessage && (

@@ -56,7 +56,37 @@ export async function getPhoto(options?: { quality?: number; allowEditing?: bool
   });
 }
 
+export function compressImage(blob: Blob, maxDimension = 1920, quality = 0.8): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round(height * (maxDimension / width));
+          width = maxDimension;
+        } else {
+          width = Math.round(width * (maxDimension / height));
+          height = maxDimension;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error('Kép tömörítés sikertelen'));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => reject(new Error('Kép betöltése sikertelen'));
+    img.src = URL.createObjectURL(blob);
+  });
+}
+
 export async function uploadMedia(blob: Blob): Promise<string> {
+  const compressed = blob.type.startsWith('image/') ? await compressImage(blob) : blob;
   const { uploadFile } = await import('./firebase');
-  return uploadFile(blob);
+  return uploadFile(compressed);
 }

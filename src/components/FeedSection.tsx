@@ -10,6 +10,7 @@ import { FeedPost, UserProfile, UserRank, FeedComment } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
 import { useToast } from './Toast';
 import { ConfirmDialog } from './ConfirmDialog';
+import { PullToRefresh } from './PullToRefresh';
 
 interface FeedSectionProps {
   posts: FeedPost[];
@@ -38,6 +39,10 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<FeedPost | null>(null);
   const { toast } = useToast();
+
+  const handleRefresh = async () => {
+    await new Promise(r => setTimeout(r, 500));
+  };
 
   const isEditor = currentUser.rank === UserRank.ADMIN || currentUser.rank === UserRank.ELITE;
 
@@ -161,7 +166,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
         {isEditor && <button onClick={() => setShowNewPostModal(true)} className="bg-brand-orange/10 p-2 rounded-xl text-brand-orange transition-all active:scale-95"><PlusCircle size={20} /></button>}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-24 scroll-smooth">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="p-4 space-y-6 pb-24 scroll-smooth">
         {filteredPosts.length === 0 ? (
           <div className="text-center py-20 text-neutral-700 font-black uppercase tracking-widest text-xs">Még nincs tartalom</div>
         ) : (
@@ -270,7 +276,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
           ))}
           </div>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
 
       {showNewPostModal && (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-6 backdrop-blur-2xl animate-fade-in">

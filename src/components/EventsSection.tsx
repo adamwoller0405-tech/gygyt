@@ -9,6 +9,7 @@ import { CyclingEvent, UserProfile, UserRank } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
 import { useToast } from './Toast';
 import { ConfirmDialog } from './ConfirmDialog';
+import { PullToRefresh } from './PullToRefresh';
 
 interface EventsSectionProps {
   events: CyclingEvent[];
@@ -37,6 +38,10 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
   const [selectedEventIdForPhoto, setSelectedEventIdForPhoto] = useState<string | null>(null);
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<string | null>(null);
+
+  const handleRefresh = async () => {
+    await new Promise(r => setTimeout(r, 500));
+  };
 
   const isEditor = currentUser.rank === UserRank.ADMIN || currentUser.rank === UserRank.ELITE;
 
@@ -170,7 +175,8 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
         )}
       </div>
 
-      <div className="p-3.5 space-y-4 max-w-lg mx-auto w-full pb-20">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="p-3.5 space-y-4 max-w-lg mx-auto w-full pb-20">
         {events.length === 0 ? (
           <div className="text-center py-20 text-neutral-500 animate-fade-in">
             <Calendar size={48} className="mx-auto mb-3 text-neutral-800" />
@@ -380,7 +386,8 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
             );
           })
         )}
-      </div>
+        </div>
+      </PullToRefresh>
 
       {/* New Event Modal */}
       {showCreateModal && (
