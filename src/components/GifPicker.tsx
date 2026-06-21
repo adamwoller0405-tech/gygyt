@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Loader2 } from 'lucide-react';
+import { Search, X, Loader2, RefreshCw } from 'lucide-react';
 
 interface Props {
   onSelect: (url: string) => void;
   onClose: () => void;
 }
 
-const GIPHY_KEY = 'dc6zaTOxFJmzC';
+const GIPHY_KEYS = ['dc6zaTOxFJmzC', 'l6VJc7C5R3FwUt9iCfmcmqXzQ7KZ3Zmo'];
 
 export const GifPicker: React.FC<Props> = ({ onSelect, onClose }) => {
   const [query, setQuery] = useState('');
@@ -14,28 +14,30 @@ export const GifPicker: React.FC<Props> = ({ onSelect, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const mountedRef = useRef(true);
+  const keyIndexRef = useRef(0);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  const search = async (q: string) => {
+  const search = async (q: string, retries = 1): Promise<void> => {
     setLoading(true);
     setError('');
+    const key = GIPHY_KEYS[keyIndexRef.current % GIPHY_KEYS.length];
     try {
       const endpoint = q.trim()
-        ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&rating=g`
-        : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=24&rating=g`;
-      const res = await fetch(endpoint);
+        ? `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(q)}&limit=24&rating=g`
+        : `https://api.giphy.com/v1/gifs/trending?api_key=${key}&limit=24&rating=g`;
+      const res = await fetch(endpoint, { mode: 'cors' });
+      if (res.status === 429 && retries > 0) {
+        keyIndexRef.current++;
+        await search(q, retries - 1);
+        return;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (mountedRef.current) setGifs(data.data ? data.data.map((g: any) => g.images?.fixed_height?.url).filter(Boolean) : []);
+      setGifs(data.data ? data.data.map((g: any) => g.images?.fixed_height?.url).filter(Boolean) : []);
     } catch {
-      if (mountedRef.current) setError('Nem sikerült betölteni. Próbáld újra később.');
+      if (retries > 0) { keyIndexRef.current++; await search(q, retries - 1); return; }
+      setError('Nem sikerült betölteni. Próbáld újra később.');
     } finally {
-      if (mountedRef.current) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -63,9 +65,15 @@ export const GifPicker: React.FC<Props> = ({ onSelect, onClose }) => {
           {loading ? (
             <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-brand-orange" /></div>
           ) : error ? (
-            <div className="flex flex-col items-center py-10 space-y-2">
+            <div className="flex flex-col items-center py-10 space-y-3">
               <p className="text-xs text-neutral-500">{error}</p>
-              <button onClick={() => search(query)} className="text-[9px] font-black text-brand-orange uppercase tracking-wider hover:underline">Újrapróbálkozás</button>
+              <button onClick={() => { keyIndexRef.current = 0; search(query); }} className="flex items-center space-x-1.5 text-[9px] font-black text-brand-orange uppercase tracking-wider hover:underline">
+                <RefreshCw size={12} /><span>Újrapróbálkozás</span>
+              </button>
+            </div>
+          ) : gifs.length === 0 ? (
+            <div className="flex justify-center py-10">
+              <p className="text-xs text-neutral-500">Nincs találat</p>
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2">

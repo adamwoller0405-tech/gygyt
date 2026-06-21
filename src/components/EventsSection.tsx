@@ -94,7 +94,9 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
   const handleCreateEvent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isEditor) { toast('Nincs jogosultságod eseményt létrehozni!', 'error'); return; }
-    if (!title.trim() || !dateTime || !locationName.trim()) return;
+    if (!title.trim()) { toast('Add meg a tekerés nevét!', 'warning'); return; }
+    if (!dateTime) { toast('Válassz időpontot!', 'warning'); return; }
+    if (!locationName.trim()) { toast('Add meg a helyszínt!', 'warning'); return; }
 
     const validPollOptions = pollOptions.filter(o => o.trim());
     const poll = showPollBuilder && pollQuestion.trim() && validPollOptions.length >= 2 ? {
