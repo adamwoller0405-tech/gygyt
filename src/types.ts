@@ -30,6 +30,7 @@ export interface UserProfile {
   isBanned?: boolean;
   flair?: string;
   blockedUsers?: string[];
+  typingIn?: { channelId: string; lastTypedAt: string };
 }
 
 export interface JoinRequest {

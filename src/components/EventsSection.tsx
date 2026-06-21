@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Calendar, Award, Users, PlusCircle, Check, HelpCircle, X, Camera, Trash2 } from 'lucide-react';
+import { Calendar, Award, Users, PlusCircle, Check, HelpCircle, X, Camera, Trash2, Download } from 'lucide-react';
 import { CyclingEvent, UserProfile, UserRank } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
 import { useToast } from './Toast';
@@ -203,6 +203,35 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                   </span>
                   
                   <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        const start = new Date(ev.dateTime);
+                        const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+                        const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                        const ics = [
+                          'BEGIN:VCALENDAR',
+                          'VERSION:2.0',
+                          'PRODID:-//GYGYT Rideout//HU',
+                          'BEGIN:VEVENT',
+                          `DTSTART:${fmt(start)}`,
+                          `DTEND:${fmt(end)}`,
+                          `SUMMARY:${ev.title}`,
+                          `DESCRIPTION:${ev.description || ''}`,
+                          `LOCATION:${ev.locationName}`,
+                          'END:VEVENT',
+                          'END:VCALENDAR',
+                        ].join('\r\n');
+                        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = `${ev.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+                        a.click(); URL.revokeObjectURL(url);
+                      }}
+                      className="p-1.5 text-neutral-600 hover:text-brand-orange transition-colors"
+                      title="Naptárba"
+                    >
+                      <Download size={14} />
+                    </button>
                     {isEditor && (
                       <button
                         onClick={() => handleDeleteEvent(ev.id)}

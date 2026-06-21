@@ -13,6 +13,7 @@ interface ChatSectionProps {
   onUpdateChats: (updatedChats: ChatMessage[]) => void;
   onReport?: (type: 'post' | 'chat' | 'user', id: string) => void;
   onBlockUser?: (userId: string, userName: string) => void;
+  onUserTyping?: (channelId: string, isTyping: boolean) => void;
 }
 
 const PRESET_EMOJIS = ['🔥', '👍', '❤️', '🎯', '🚴', '🍕'];
@@ -33,7 +34,7 @@ const canAccessChannel = (rank: UserRank, channelId: string) => {
   return false;
 };
 
-export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, users, onUpdateChats, onReport, onBlockUser }) => {
+export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, users, onUpdateChats, onReport, onBlockUser, onUserTyping }) => {
   const { toast } = useToast();
   const [activeChannel, setActiveChannel] = useState('global');
   const [messageText, setMessageText] = useState('');
@@ -52,7 +53,10 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
   const [chatSearchOpen, setChatSearchOpen] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState('');
   const [swipedMsgId, setSwipedMsgId] = useState<string | null>(null);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionIndex, setMentionIndex] = useState(-1);
   const swipeTouchStart = useRef<{ x: number; y: number; msgId: string } | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const undoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -153,6 +157,8 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
     onUpdateChats([...chats, newMessage]);
     setMessageText('');
     setShowEmojiPicker(false);
+    onUserTyping?.(activeChannel, false);
+    if (typingTimeoutRef.current) { clearTimeout(typingTimeoutRef.current); typingTimeoutRef.current = null; }
 
     clearUndo();
     setUndoMsgId(newMessage.id);
@@ -230,6 +236,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
 
   const nonDmUsers = users.filter(u => u.id !== currentUser.id && u.rank !== UserRank.ADMIN && !u.isBanned);
   const filteredDmUsers = dmSearch.trim() ? nonDmUsers.filter(u => u.name.toLowerCase().includes(dmSearch.toLowerCase())) : nonDmUsers;
+  const mentionUsers = mentionQuery.trim() ? users.filter(u => u.name.toLowerCase().includes(mentionQuery.toLowerCase()) && u.id !== currentUser.id && !u.isBanned) : [];
 
   return (
     <div className="flex-1 flex h-full bg-bg-deep overflow-hidden min-h-0 relative">
@@ -462,7 +469,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                               <p className="italic text-neutral-500 text-[10px]">Üzenet törölve</p>
                             ) : (
                               <>
-                                <p className="break-words leading-relaxed">{msg.content}</p>
+                                <p className="break-words leading-relaxed">{msg.content.split(/(@[a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ\.\-_]+)/g).map((part, i) => part.startsWith('@') ? <span key={i} className="text-brand-orange font-black">{part}</span> : part)}</p>
                                 {msg.imageUrl && (
                                   <div className="mt-2 rounded-xl overflow-hidden border border-black/20 shadow-md">
                                     <img src={msg.imageUrl} className="w-full max-w-[240px] block" alt="" />
@@ -514,6 +521,25 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
           </div>
         </PullToRefresh>
 
+        {/* Typing indicator */}
+        {(() => {
+          const now = Date.now();
+          const typers = users.filter(u =>
+            u.typingIn?.channelId === activeChannel &&
+            u.id !== currentUser.id &&
+            now - new Date(u.typingIn.lastTypedAt).getTime() < 4000
+          );
+          if (typers.length === 0) return null;
+          return (
+            <div className="px-4 py-1.5 bg-bg-panel border-t border-border-subtle">
+              <p className="text-[9px] text-neutral-500 font-bold">
+                <span className="inline-block w-2 h-2 rounded-full bg-brand-orange animate-pulse mr-1.5" />
+                {typers.map(t => t.name).join(', ')} {typers.length === 1 ? 'ír...' : 'írnak...'}
+              </p>
+            </div>
+          );
+        })()}
+
         {/* Reply preview */}
         {replyMessage && (
           <div className="px-4 py-2 bg-bg-panel border-t border-border-subtle flex items-center space-x-2">
@@ -547,7 +573,24 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
           </div>
         )}
 
-        <div className="p-3 bg-bg-panel border-t border-border-subtle">
+        <div className="p-3 bg-bg-panel border-t border-border-subtle relative">
+          {mentionQuery && mentionUsers.length > 0 && (
+            <div className="absolute bottom-full left-3 right-3 mb-1 bg-bg-card border border-border-subtle rounded-2xl shadow-2xl overflow-hidden max-h-36 overflow-y-auto z-10">
+              {mentionUsers.slice(0, 8).map(u => (
+                <button key={u.id} type="button" onClick={() => {
+                  const before = messageText.slice(0, mentionIndex);
+                  const after = messageText.slice(mentionIndex + mentionQuery.length + 1);
+                  setMessageText(`${before}@${u.name} ${after}`);
+                  setMentionQuery('');
+                  setMentionIndex(-1);
+                }} className="w-full flex items-center space-x-2 px-3 py-2 hover:bg-white/5 transition-all text-left">
+                  <img src={u.avatarUrl} className="w-5 h-5 rounded-full object-cover" alt="" />
+                  <span className="text-[10px] font-bold text-neutral-200">@{u.name}</span>
+                  <span className="text-[7px] text-neutral-500 ml-auto">{u.rank}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <form onSubmit={handleSendMessage} className="flex items-center space-x-2 max-w-2xl mx-auto">
             <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center">
               <Smile size={18} />
@@ -555,9 +598,37 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
             <button type="button" onClick={handleUploadMedia} disabled={isUploading} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center">
               {isUploading ? <Loader2 className="animate-spin" size={18} /> : <Camera size={18} />}
             </button>
-            <input type="text" value={messageText} onChange={(e) => setMessageText(e.target.value)} placeholder="Üzenet..."
+            <input type="text" value={messageText} onChange={(e) => {
+              const val = e.target.value;
+              setMessageText(val);
+              const lastAt = val.lastIndexOf('@');
+              if (lastAt >= 0 && (lastAt === 0 || val[lastAt - 1] === ' ')) {
+                const afterAt = val.slice(lastAt + 1);
+                const word = afterAt.split(' ')[0];
+                setMentionQuery(word);
+                setMentionIndex(lastAt);
+              } else { setMentionQuery(''); setMentionIndex(-1); }
+              onUserTyping?.(activeChannel, true);
+              if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+              typingTimeoutRef.current = setTimeout(() => onUserTyping?.(activeChannel, false), 3000);
+            }} placeholder="Üzenet..."
               className="flex-1 bg-black px-4 py-2.5 rounded-xl text-xs text-neutral-200 outline-none focus:border-brand-orange border border-border-subtle transition-all"
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) handleSendMessage(e); }} />
+              onKeyDown={(e) => {
+                if (mentionQuery && mentionUsers.length > 0) {
+                  if (e.key === 'Enter' || e.key === 'Tab') {
+                    e.preventDefault();
+                    const u = mentionUsers[0];
+                    const before = messageText.slice(0, mentionIndex);
+                    const after = messageText.slice(mentionIndex + mentionQuery.length + 1);
+                    setMessageText(`${before}@${u.name} ${after}`);
+                    setMentionQuery('');
+                    setMentionIndex(-1);
+                    return;
+                  }
+                  if (e.key === 'Escape') { setMentionQuery(''); setMentionIndex(-1); return; }
+                }
+                if (e.key === 'Enter' && !e.shiftKey) handleSendMessage(e);
+              }} />
             <button type="submit" disabled={!messageText.trim()}
               className={`p-2.5 rounded-xl transition-all ${!messageText.trim() ? 'bg-neutral-800 text-neutral-600' : 'bg-brand-orange text-black font-black active:scale-95'}`}>
               <Send size={18} />

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2, Ban } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
-import { UserProfile } from '../types';
+import { UserProfile, CyclingEvent } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
 import { ACHIEVEMENTS } from '../data/mockData';
 
 interface ProfileSectionProps {
   users: UserProfile[];
   currentUser: UserProfile;
+  events?: CyclingEvent[];
   onUpdateCurrentUser: (updatedUser: UserProfile) => void;
   onLogout?: () => void;
   onDeleteAccount?: () => void;
@@ -18,6 +19,7 @@ interface ProfileSectionProps {
 export const ProfileSection: React.FC<ProfileSectionProps> = ({
   users,
   currentUser,
+  events = [],
   onUpdateCurrentUser,
   onLogout,
   onDeleteAccount,
@@ -162,6 +164,32 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="bg-bg-card rounded-[32px] p-6 border border-border-card shadow-lg space-y-4">
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="text-brand-orange" size={16} />
+              <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500">Tekerés Történet</h3>
+            </div>
+            {(() => {
+              const pastRides = events.filter(e => new Date(e.dateTime) < new Date() && Object.keys(e.rsvps).some(k => e.rsvps[k] === 'going' && k === currentUser.id));
+              if (pastRides.length === 0) return <p className="text-[10px] text-neutral-600 font-bold text-center py-4">Még nem voltál tekerésen</p>;
+              return (
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {pastRides.sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()).slice(0, 10).map(ev => (
+                    <div key={ev.id} className="flex items-start space-x-3 p-2.5 bg-black/30 rounded-2xl border border-border-subtle/30">
+                      <div className="w-8 h-8 rounded-xl bg-brand-orange/10 flex items-center justify-center text-sm shrink-0">
+                        {ev.type === 'Race' ? '🏆' : ev.type === 'Meetup' ? '🍕' : ev.type === 'Social' ? '🎉' : ev.type === 'Maintenance' ? '🔧' : '🚴'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-black text-white truncate">{ev.title}</p>
+                        <p className="text-[8px] text-neutral-500 font-bold">{new Date(ev.dateTime).toLocaleDateString('hu-HU', { year: 'numeric', month: 'short', day: 'numeric' })} • {ev.locationName}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           <button onClick={() => { const url = `${window.location.origin}/app/?user=${currentUser.id}`; if (navigator.share) { navigator.share({ title: `GYGYT Rideout — ${currentUser.name}`, url }).catch(() => {}); } else { navigator.clipboard?.writeText(url).catch(() => {}); } }} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">

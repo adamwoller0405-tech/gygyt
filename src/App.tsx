@@ -375,7 +375,12 @@ function AppContent() {
                 const old = chats.find(oc => oc.id === c.id);
                 if (!old || JSON.stringify(old) !== JSON.stringify(c)) await setDoc(doc(db, 'chats', c.id), c);
               }
-            }} onReport={handleReport} onBlockUser={handleBlockUser} />}
+            }} onReport={handleReport} onBlockUser={handleBlockUser} onUserTyping={async (chId, typing) => {
+              if (!activeUser) return;
+              await setDoc(doc(db, 'users', activeUser.id), {
+                typingIn: typing ? { channelId: chId, lastTypedAt: new Date().toISOString() } : null
+              }, { merge: true });
+            }} />}
 
             {currentTab === 'events' && <EventsSection events={filteredEvents} currentUser={activeUser} users={users} onUpdateEvents={async (ue) => {
               const deletedIds = events.filter(oe => !ue.find(e => e.id === oe.id)).map(e => e.id);
@@ -403,7 +408,7 @@ function AppContent() {
 
             {currentTab === 'leaderboard' && <LeaderboardSection users={users} currentUser={activeUser} />}
 
-            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} onDeleteAccount={handleDeleteAccount} />}
+            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} events={events} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} onDeleteAccount={handleDeleteAccount} />}
 
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bike, MessageSquare, Calendar, ChevronRight } from 'lucide-react';
+import { Bike, MessageSquare, Calendar, User, Award, ChevronRight, X } from 'lucide-react';
 
 const slides = [
   {
@@ -10,12 +10,22 @@ const slides = [
   {
     icon: MessageSquare,
     title: 'Hírfolyam & Chat',
-    desc: 'Ossz meg képeket a Hírfolyamban, vagy csevegj a többiekkel a Chatben. Külön csatornák a különböző rangoknak.',
+    desc: 'Ossz meg képeket a Hírfolyamban, vagy csevegj a többiekkel a Chatben. Külön csatornák a különböző rangoknak. Használj @mentions mások megjelölésére!',
   },
   {
     icon: Calendar,
     title: 'Események & Rangok',
-    desc: 'Csatlakozz közös tekerésekhez, és szerezz rangokat és kitüntetéseket!',
+    desc: 'Csatlakozz közös tekerésekhez, szerezz rangokat és kitüntetéseket, és építsd a történeted!',
+  },
+  {
+    icon: User,
+    title: 'Profil & Kitüntetések',
+    desc: 'Szerkeszd a profilod, adj hozzá egyedi címkét, és gyűjts badge-eket a teljesítményeidért. QR kóddal is megoszthatod a profilod!',
+  },
+  {
+    icon: Award,
+    title: 'Tippek & Trükkök',
+    desc: 'Húzd le a frissítéshez a hírfolyamban. Csúsztasd balra az üzeneteket a gyors törléshez. @említés működik chatben. Kapcsold ki az értesítéseket a Menüben.',
   },
 ];
 
@@ -29,7 +39,11 @@ export const OnboardingOverlay: React.FC<Props> = ({ onDone }) => {
 
   return (
     <div className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center p-8 animate-fade-in">
-      <div className="max-w-sm w-full space-y-10 text-center">
+      <div className="max-w-sm w-full space-y-8 text-center relative">
+        <button onClick={onDone} className="absolute -top-4 right-0 text-neutral-600 hover:text-white p-2 transition-colors">
+          <X size={20} />
+        </button>
+
         <div className="w-28 h-28 bg-brand-orange/10 rounded-[40px] flex items-center justify-center mx-auto border border-brand-orange/20 shadow-2xl">
           <S.icon size={56} className="text-brand-orange" />
         </div>
@@ -52,6 +66,12 @@ export const OnboardingOverlay: React.FC<Props> = ({ onDone }) => {
           <span>{slide < slides.length - 1 ? 'Tovább' : 'Kezdjük!'}</span>
           <ChevronRight size={16} />
         </button>
+
+        {slide < slides.length - 1 && (
+          <button onClick={onDone} className="text-[9px] text-neutral-600 font-black uppercase tracking-widest hover:text-neutral-400 transition-colors block mx-auto">
+            Kihagyás
+          </button>
+        )}
       </div>
     </div>
   );
