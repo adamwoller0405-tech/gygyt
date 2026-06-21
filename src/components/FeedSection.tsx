@@ -39,6 +39,9 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   const [currentHashFilter, setCurrentHashFilter] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<FeedPost | null>(null);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+  const [showPollBuilder, setShowPollBuilder] = useState(false);
   const { toast } = useToast();
 
   const handleRefresh = async () => {
@@ -126,6 +129,12 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
     const extraTags = newPostCaption.match(/#[a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/g)?.map(m => m.replace('#', '').toLowerCase()) || [];
     if (!extraTags.includes('gygyt')) extraTags.push('gygyt');
 
+    const validPollOptions = pollOptions.filter(o => o.trim());
+    const poll = showPollBuilder && pollQuestion.trim() && validPollOptions.length >= 2 ? {
+      question: pollQuestion.trim(),
+      options: validPollOptions.map(text => ({ text, votes: [] }))
+    } : undefined;
+
     const newPost: FeedPost = {
       id: `post_${Date.now()}`,
       authorId: currentUser.id,
@@ -138,7 +147,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
       likes: [],
       comments: [],
       hashtags: extraTags,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      polls: poll ? [poll] : undefined
     };
 
     onUpdatePosts([newPost, ...posts]);
@@ -147,6 +157,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
     localStorage.removeItem('draft_post_caption');
     localStorage.removeItem('draft_post_media');
     setShowNewPostModal(false);
+    setPollQuestion(''); setPollOptions(['', '']); setShowPollBuilder(false);
   };
 
   const handleDeletePost = () => {
@@ -221,6 +232,35 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                 <div className="flex flex-wrap gap-2">
                   {post.hashtags.map(h => <span key={h} className="text-[10px] font-black text-brand-orange">#{h}</span>)}
                 </div>
+
+                {post.polls && post.polls.length > 0 && post.polls[0] && (
+                  <div className="bg-black/30 rounded-2xl p-3 space-y-2 mt-1">
+                    <p className="text-[11px] font-black text-white mb-1">{post.polls[0].question}</p>
+                    {post.polls[0].options.map((opt, oi) => {
+                      const totalVotes = post.polls![0].options.reduce((s, o) => s + o.votes.length, 0);
+                      const pct = totalVotes > 0 ? Math.round((opt.votes.length / totalVotes) * 100) : 0;
+                      const voted = opt.votes.includes(currentUser.id);
+                      return (
+                        <div key={oi} className="relative">
+                          <div className={`w-full bg-black border ${voted ? 'border-brand-orange/40' : 'border-border-subtle'} rounded-xl h-8 flex items-center px-3 relative overflow-hidden cursor-pointer hover:border-neutral-600 transition-all`}
+                            onClick={() => {
+                              const updated = [...posts];
+                              const pst = updated.find(p => p.id === post.id);
+                              if (!pst?.polls?.[0]) return;
+                              const hasVoted = pst.polls[0].options.some(o => o.votes.includes(currentUser.id));
+                              if (hasVoted) return;
+                              pst.polls[0].options[oi].votes.push(currentUser.id);
+                              onUpdatePosts(updated);
+                            }}>
+                            <div className={`absolute inset-0 transition-all ${voted ? 'bg-brand-orange/10' : 'bg-neutral-900'}`} style={{ width: `${pct}%` }} />
+                            <span className="relative text-[10px] text-neutral-200 flex-1 truncate">{opt.text}</span>
+                            <span className={`relative text-[9px] font-black ${voted ? 'text-brand-orange' : 'text-neutral-500'}`}>{pct}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                   <div className="flex items-center justify-between pt-2 border-t border-border-subtle/50">
                   <div className="flex items-center space-x-4">
@@ -309,6 +349,31 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
               placeholder="Írj valamit..."
               rows={3}
             />
+
+            <div className="space-y-2">
+              <button type="button" onClick={() => setShowPollBuilder(!showPollBuilder)} className={`w-full p-3 rounded-2xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center space-x-2 transition-all ${showPollBuilder ? 'bg-brand-orange/10 border-brand-orange/30 text-brand-orange' : 'bg-black border-border-subtle text-neutral-500 hover:text-neutral-300'}`}>
+                <span>{showPollBuilder ? '−' : '+'}</span>
+                <span>Szavazás hozzáadása</span>
+              </button>
+              {showPollBuilder && (
+                <div className="bg-black/40 rounded-2xl p-3 space-y-2 border border-border-subtle animate-fade-in">
+                  <input type="text" value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="Szavazás kérdése..."
+                    className="w-full bg-black border border-border-subtle rounded-xl px-3 py-2 text-[10px] text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange" />
+                  {pollOptions.map((opt, i) => (
+                    <div key={i} className="flex items-center space-x-2">
+                      <input type="text" value={opt} onChange={(e) => { const next = [...pollOptions]; next[i] = e.target.value; setPollOptions(next); }} placeholder={`Opció ${i + 1}...`}
+                        className="flex-1 bg-black border border-border-subtle rounded-xl px-3 py-2 text-[10px] text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange" />
+                      {pollOptions.length > 2 && (
+                        <button type="button" onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-red-500 p-1" aria-label="Opció eltávolítása">✕</button>
+                      )}
+                    </div>
+                  ))}
+                  {pollOptions.length < 6 && (
+                    <button type="button" onClick={() => setPollOptions([...pollOptions, ''])} className="text-[9px] text-neutral-500 font-black hover:text-neutral-300 transition-colors">+ Opció hozzáadása</button>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="flex gap-4">
               <button onClick={() => { setShowNewPostModal(false); }} className="flex-1 py-4 rounded-3xl text-[10px] font-black uppercase text-neutral-500 hover:text-white transition-all">Mégse</button>

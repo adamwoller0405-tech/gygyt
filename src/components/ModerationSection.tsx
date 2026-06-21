@@ -12,17 +12,23 @@ import { ConfirmDialog } from './ConfirmDialog';
 interface ModerationSectionProps {
   joinRequests: JoinRequest[];
   users: UserProfile[];
+  events?: any[];
+  posts?: any[];
+  chats?: any[];
   currentUser: UserProfile;
   onUpdateJoinRequests: (updated: JoinRequest[]) => void;
   onUpdateUsers: (updated: UserProfile[]) => void;
   onDeleteUser?: (userId: string) => void;
 }
 
-type AdminTab = 'requests' | 'users';
+type AdminTab = 'requests' | 'users' | 'analytics';
 
 export const ModerationSection: React.FC<ModerationSectionProps> = ({
   joinRequests,
   users,
+  events,
+  posts,
+  chats,
   currentUser,
   onUpdateJoinRequests,
   onUpdateUsers,
@@ -124,6 +130,14 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
   const filteredUsers = userSearch.trim()
     ? nonAdminUsers.filter(u => u.name.toLowerCase().includes(userSearch.toLowerCase()))
     : nonAdminUsers;
+  const totalEvents = events?.length || 0;
+  const totalPosts = posts?.length || 0;
+  const totalChats = chats?.length || 0;
+  const totalJoinReqs = joinRequests.length;
+  const pendingReqsCount = pendingRequests.length;
+  const rankDist = [UserRank.BRONZE, UserRank.SILVER, UserRank.GOLD, UserRank.DIAMOND, UserRank.CHAMPION, UserRank.ELITE].map(r => ({ rank: r, count: nonAdminUsers.filter(u => u.rank === r).length }));
+  const activeUsersToday = nonAdminUsers.length;
+  const usersWithWarnings = nonAdminUsers.filter(u => u.warnings && u.warnings.length > 0).length;
 
   return (
     <div className="flex flex-col h-full bg-bg-deep animate-fade-in overflow-hidden">
@@ -163,7 +177,8 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
       <div className="flex bg-black/40 mx-4 mt-3 p-1 rounded-2xl border border-border-subtle">
         {[
           { key: 'requests' as AdminTab, icon: UserCheck, label: 'Jelentkezések', count: pendingRequests.length },
-          { key: 'users' as AdminTab, icon: Users, label: 'Felhasználók', count: totalNonAdmin }
+          { key: 'users' as AdminTab, icon: Users, label: 'Felhasználók', count: totalNonAdmin },
+          { key: 'analytics' as AdminTab, icon: Award, label: 'Statisztika', count: 0 }
         ].map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === t.key ? 'bg-brand-orange text-black' : 'text-neutral-500'}`}>
@@ -392,6 +407,91 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
             </button>
 
             <p className="text-center text-[9px] text-neutral-600 font-bold uppercase tracking-tighter opacity-50 pt-2">A változtatások azonnal mentésre kerülnek.</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'analytics' && (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+          {/* Overview */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-brand-orange">{totalNonAdmin}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Összes Tag</p>
+            </div>
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-yellow-500">{pendingReqsCount}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Függő Jelentkezés</p>
+            </div>
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-blue-500">{totalEvents}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Események</p>
+            </div>
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-green-500">{totalPosts}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Bejegyzések</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-purple-500">{totalChats}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Üzenetek</p>
+            </div>
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-pink-500">{activeUsersToday}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Aktív Felhasználó</p>
+            </div>
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-red-500">{bannedCount}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Kitiltott</p>
+            </div>
+            <div className="bg-bg-card rounded-2xl border border-border-card p-4 text-center">
+              <p className="text-2xl font-black text-orange-500">{usersWithWarnings}</p>
+              <p className="text-[9px] font-black uppercase text-neutral-500 tracking-wider mt-1">Figyelmeztetett</p>
+            </div>
+          </div>
+
+          {/* Rank Distribution */}
+          <div className="bg-bg-card rounded-2xl border border-border-card p-4">
+            <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500 mb-3">Rang Eloszlás</h3>
+            <div className="space-y-2">
+              {rankDist.map(({ rank, count }) => {
+                const pct = totalNonAdmin > 0 ? (count / totalNonAdmin) * 100 : 0;
+                const colors: Record<string, string> = {
+                  [UserRank.BRONZE]: 'bg-amber-700', [UserRank.SILVER]: 'bg-slate-400', [UserRank.GOLD]: 'bg-yellow-500',
+                  [UserRank.DIAMOND]: 'bg-cyan-500', [UserRank.CHAMPION]: 'bg-purple-600', [UserRank.ELITE]: 'bg-red-500'
+                };
+                return (
+                  <div key={rank} className="flex items-center space-x-3">
+                    <span className="text-[8px] font-black text-neutral-500 w-16 uppercase">{rank}</span>
+                    <div className="flex-1 h-4 bg-black rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${colors[rank] || 'bg-neutral-600'}`} style={{ width: `${Math.max(pct, 2)}%` }} />
+                    </div>
+                    <span className="text-[10px] font-black text-neutral-400 w-8 text-right">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Join Requests Timeline */}
+          <div className="bg-bg-card rounded-2xl border border-border-card p-4">
+            <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500 mb-3">Jelentkezési Statisztika</h3>
+            <div className="flex items-center justify-around text-center">
+              <div>
+                <p className="text-xl font-black text-green-500">{joinRequests.filter(r => r.status === 'approved').length}</p>
+                <p className="text-[8px] font-black uppercase text-neutral-500">Elfogadva</p>
+              </div>
+              <div>
+                <p className="text-xl font-black text-red-500">{joinRequests.filter(r => r.status === 'rejected').length}</p>
+                <p className="text-[8px] font-black uppercase text-neutral-500">Elutasítva</p>
+              </div>
+              <div>
+                <p className="text-xl font-black text-yellow-500">{pendingReqsCount}</p>
+                <p className="text-[8px] font-black uppercase text-neutral-500">Függőben</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

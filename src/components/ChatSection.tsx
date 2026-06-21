@@ -7,6 +7,7 @@ import { checkRateLimit } from '../lib/rateLimit';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PullToRefresh } from './PullToRefresh';
 import { GifPicker } from './GifPicker';
+import { VoiceRecorder } from './VoiceRecorder';
 
 interface ChatSectionProps {
   chats: ChatMessage[];
@@ -485,6 +486,11 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                                     <video src={msg.videoUrl} className="w-full block" controls />
                                   </div>
                                 )}
+                                {msg.audioUrl && (
+                                  <div className="mt-2">
+                                    <audio src={msg.audioUrl} controls className="h-9 w-52" />
+                                  </div>
+                                )}
                                 {msg.isEdited && !isDeleted && (
                                   <span className="text-[8px] text-neutral-500 italic block mt-1">(szerkesztve)</span>
                                 )}
@@ -624,6 +630,34 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
             <button type="button" onClick={() => setShowGifPicker(true)} className="p-2.5 bg-black text-purple-500 rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center text-[9px] font-black" aria-label="GIF">
               GIF
             </button>
+            <VoiceRecorder onSend={async (blob) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(blob);
+              reader.onloadend = async () => {
+                const base64 = reader.result as string;
+                const formData = new FormData();
+                formData.append('file', base64);
+                formData.append('upload_preset', 'gygyt_media');
+                try {
+                  const res = await fetch('https://api.cloudinary.com/v1_1/dkzlohsur/upload', { method: 'POST', body: formData });
+                  const data = await res.json();
+                  const newMessage: ChatMessage = {
+                    id: `message_${Date.now()}`,
+                    channelId: activeChannel,
+                    senderId: currentUser.id,
+                    senderName: currentUser.name,
+                    senderRank: currentUser.rank,
+                    senderAvatar: currentUser.avatarUrl,
+                    content: '',
+                    audioUrl: data.secure_url,
+                    timestamp: new Date().toISOString(),
+                    reactions: {},
+                    readBy: [currentUser.id]
+                  };
+                  onUpdateChats([...chats, newMessage]);
+                } catch { toast('Hang feltöltése sikertelen', 'error'); }
+              };
+            }} />
             <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center" aria-label="Emoji">
               <Smile size={18} aria-hidden="true" />
             </button>

@@ -58,6 +58,7 @@ export interface ChatMessage {
   content: string;
   imageUrl?: string;
   videoUrl?: string;
+  audioUrl?: string;
   timestamp: string;
   repliedTo?: {
     messageId: string;
@@ -108,6 +109,10 @@ export interface FeedPost {
   hashtags: string[]; // #ride, #GYGYT
   createdAt: string;
   isSaved?: boolean;
+  polls?: {
+    question: string;
+    options: { text: string; votes: string[] }[];
+  }[];
 }
 
 export interface FeedComment {

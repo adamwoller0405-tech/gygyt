@@ -432,7 +432,7 @@ function AppContent() {
 
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 
-            {currentTab === 'moderation' && <ModerationSection joinRequests={joinRequests} users={users} currentUser={activeUser} onUpdateJoinRequests={async (reqs) => {
+            {currentTab === 'moderation' && <ModerationSection events={events} posts={posts} chats={chats} joinRequests={joinRequests} users={users} currentUser={activeUser} onUpdateJoinRequests={async (reqs) => {
               for (const r of reqs) {
                 const old = joinRequests.find(or => or.id === r.id);
                 if (!old || old.status !== r.status) await setDoc(doc(db, 'joinRequests', r.id), r);
