@@ -463,7 +463,7 @@ function AppContent() {
 
             {currentTab === 'leaderboard' && <LeaderboardSection users={users} currentUser={activeUser} />}
 
-            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} events={events} onUpdateCurrentUser={async (u) => { await setDoc(doc(db, 'users', u.id), u); setUsers(prev => prev.map(p => p.id === u.id ? u : p)); }} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} onDeleteAccount={handleDeleteAccount} onToggleEmailNotifs={async () => { const updated = { ...activeUser, emailNotifs: !activeUser.emailNotifs }; await setDoc(doc(db, 'users', activeUser.id), updated); setActiveUser(updated); }} />}
+            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} events={events} onUpdateCurrentUser={async (u) => { await setDoc(doc(db, 'users', u.id), u); setUsers(prev => prev.map(p => p.id === u.id ? u : p)); }} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} onDeleteAccount={handleDeleteAccount} onToggleEmailNotifs={async () => { if (!activeUser) return; const updated = { ...activeUser, emailNotifs: !activeUser.emailNotifs }; await setDoc(doc(db, 'users', activeUser.id), updated); setUsers(prev => prev.map(u => u.id === activeUser.id ? updated : u)); }} />}
 
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 
