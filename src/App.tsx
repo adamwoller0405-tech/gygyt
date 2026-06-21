@@ -439,19 +439,22 @@ function AppContent() {
             }} />}
 
             {currentTab === 'events' && <EventsSection events={filteredEvents} currentUser={activeUser} users={users} onUpdateEvents={async (ue) => {
-              const deletedIds = events.filter(oe => !ue.find(e => e.id === oe.id)).map(e => e.id);
-              for (const id of deletedIds) await deleteDoc(doc(db, 'events', id));
-              for (const e of ue) {
-                const old = events.find(oe => oe.id === e.id);
-                if (!old || JSON.stringify(old) !== JSON.stringify(e)) {
-                  await setDoc(doc(db, 'events', e.id), e);
-                  const newRsvp = Object.keys(e.rsvps).find(k => !old?.rsvps?.[k]);
-                  if (newRsvp && e.creatorId !== activeUser.id && newRsvp !== activeUser.id) {
-                    const fromUser = users.find(u => u.id === newRsvp);
-                    if (fromUser) writeNotification('event_rsvp', e.creatorId, fromUser.id, fromUser.name, undefined, e.id);
+              setEvents(ue);
+              try {
+                const deletedIds = events.filter(oe => !ue.find(e => e.id === oe.id)).map(e => e.id);
+                for (const id of deletedIds) await deleteDoc(doc(db, 'events', id));
+                for (const e of ue) {
+                  const old = events.find(oe => oe.id === e.id);
+                  if (!old || JSON.stringify(old) !== JSON.stringify(e)) {
+                    await setDoc(doc(db, 'events', e.id), e);
+                    const newRsvp = Object.keys(e.rsvps).find(k => !old?.rsvps?.[k]);
+                    if (newRsvp && e.creatorId !== activeUser.id && newRsvp !== activeUser.id) {
+                      const fromUser = users.find(u => u.id === newRsvp);
+                      if (fromUser) writeNotification('event_rsvp', e.creatorId, fromUser.id, fromUser.name, undefined, e.id);
+                    }
                   }
                 }
-              }
+              } catch {}
             }} onUserStatsUpdate={async (uid, stats) => {
               await updateDoc(doc(db, 'users', uid), {
                 stats: { eventsJoined: stats.events }
