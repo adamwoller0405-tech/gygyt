@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Hash, Send, Camera, Loader2, Flag, Trash2, Edit3, Smile, MessageSquare, ChevronLeft, Users, Search, X, RotateCcw, Filter } from 'lucide-react';
+import { Hash, Send, Camera, Loader2, Flag, Trash2, Edit3, Smile, MessageSquare, ChevronLeft, Users, Search, X, RotateCcw, Filter, Ban } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { ChatMessage, UserProfile, UserRank } from '../types';
 import { useToast } from './Toast';
@@ -12,6 +12,7 @@ interface ChatSectionProps {
   users: UserProfile[];
   onUpdateChats: (updatedChats: ChatMessage[]) => void;
   onReport?: (type: 'post' | 'chat' | 'user', id: string) => void;
+  onBlockUser?: (userId: string, userName: string) => void;
 }
 
 const PRESET_EMOJIS = ['🔥', '👍', '❤️', '🎯', '🚴', '🍕'];
@@ -32,7 +33,7 @@ const canAccessChannel = (rank: UserRank, channelId: string) => {
   return false;
 };
 
-export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, users, onUpdateChats, onReport }) => {
+export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, users, onUpdateChats, onReport, onBlockUser }) => {
   const { toast } = useToast();
   const [activeChannel, setActiveChannel] = useState('global');
   const [messageText, setMessageText] = useState('');
@@ -212,13 +213,14 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
   };
 
   const currentChatMessages = useMemo(() => {
-    const channelMsgs = chats.filter(c => c.channelId === activeChannel);
+    const blocked = currentUser.blockedUsers || [];
+    const channelMsgs = chats.filter(c => c.channelId === activeChannel && !blocked.includes(c.senderId));
     if (!chatSearchQuery.trim()) return channelMsgs;
     const q = chatSearchQuery.toLowerCase();
     return channelMsgs.filter(m =>
       (m.content?.toLowerCase().includes(q) || m.senderName?.toLowerCase().includes(q)) && !m.isDeleted
     );
-  }, [chats, activeChannel, chatSearchQuery]);
+  }, [chats, activeChannel, chatSearchQuery, currentUser.blockedUsers]);
 
   const handleRefresh = async () => {
     await new Promise(r => setTimeout(r, 500));
@@ -496,6 +498,9 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                       <span className="text-[7px] text-blue-400 font-black tracking-wider" title={msg.readBy.filter(id => id !== currentUser.id).length + ' másik olvasta'}>
                         LÁTVA
                       </span>
+                    )}
+                    {!isOwn && !isDeleted && onBlockUser && (
+                      <button onClick={() => onBlockUser(msg.senderId, msg.senderName)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Ban size={10} /></button>
                     )}
                     {onReport && !isDeleted && (
                       <button onClick={() => onReport('chat', msg.id)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Flag size={10} /></button>

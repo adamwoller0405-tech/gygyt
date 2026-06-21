@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2 } from 'lucide-react';
+import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2, Ban } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { UserProfile } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -10,6 +10,7 @@ interface ProfileSectionProps {
   currentUser: UserProfile;
   onUpdateCurrentUser: (updatedUser: UserProfile) => void;
   onLogout?: () => void;
+  onDeleteAccount?: () => void;
   theme?: 'dark' | 'light';
   onToggleTheme?: () => void;
 }
@@ -19,6 +20,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   currentUser,
   onUpdateCurrentUser,
   onLogout,
+  onDeleteAccount,
   theme = 'dark',
   onToggleTheme
 }) => {
@@ -167,10 +169,65 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             <span className="text-xs font-black text-white uppercase tracking-wider">Profil Megosztása</span>
           </button>
 
+          <details className="w-full bg-bg-card border border-border-card rounded-[36px] overflow-hidden shadow-xl group">
+            <summary className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-xl bg-brand-orange/10 flex items-center justify-center text-sm">📱</div>
+                <span className="text-xs font-black text-white uppercase tracking-wider">QR Kód</span>
+              </div>
+              <span className="text-neutral-600 text-xs">+</span>
+            </summary>
+            <div className="px-5 pb-5 flex justify-center">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/app/?user=${currentUser.id}`)}`}
+                alt="QR kód"
+                className="w-36 h-36 rounded-2xl border border-border-subtle"
+              />
+            </div>
+          </details>
+
+          {(currentUser.blockedUsers?.length || 0) > 0 && (
+            <details className="w-full bg-bg-card border border-border-card rounded-[36px] overflow-hidden shadow-xl group">
+              <summary className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center">
+                    <Ban size={16} className="text-red-400" />
+                  </div>
+                  <span className="text-xs font-black text-white uppercase tracking-wider">Letiltott felhasználók ({currentUser.blockedUsers!.length})</span>
+                </div>
+                <span className="text-neutral-600 text-xs">+</span>
+              </summary>
+              <div className="px-5 pb-5 space-y-2">
+                {currentUser.blockedUsers!.map(blockedId => {
+                  const blockedUser = users.find(u => u.id === blockedId);
+                  return (
+                    <div key={blockedId} className="flex items-center justify-between bg-black/40 rounded-2xl p-3">
+                      <div className="flex items-center space-x-2">
+                        <img src={blockedUser?.avatarUrl || ''} className="w-6 h-6 rounded-full object-cover" alt="" />
+                        <span className="text-xs font-bold text-neutral-300">{blockedUser?.name || 'Ismeretlen'}</span>
+                      </div>
+                      <button onClick={() => {
+                        const updated = { ...currentUser, blockedUsers: (currentUser.blockedUsers || []).filter(id => id !== blockedId) };
+                        onUpdateCurrentUser(updated);
+                      }} className="text-[9px] font-black text-green-400 bg-green-400/10 px-3 py-1 rounded-full hover:bg-green-400/20 transition-all">FELOLDÁS</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          )}
+
           {onToggleTheme && (
             <button onClick={onToggleTheme} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">
               {theme === 'dark' ? <Sun size={18} className="text-brand-orange" /> : <Moon size={18} className="text-brand-orange" />}
               <span className="text-xs font-black text-white uppercase tracking-wider">{theme === 'dark' ? 'Világos Téma' : 'Sötét Téma'}</span>
+            </button>
+          )}
+
+          {onDeleteAccount && (
+            <button onClick={onDeleteAccount} className="w-full bg-red-500/5 border border-red-500/10 text-red-400 font-black p-5 rounded-[36px] uppercase tracking-widest text-xs flex items-center justify-center space-x-3 hover:bg-red-500/10 transition-all shadow-xl shadow-red-500/5">
+              <X size={18} />
+              <span>Fiók Törlése</span>
             </button>
           )}
 

@@ -26,7 +26,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
-import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, type User } from 'firebase/auth';
+import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, type User } from 'firebase/auth';
 import { auth, db } from './lib/firebase';
 
 import { AuthSection } from './components/AuthSection';
@@ -225,6 +225,30 @@ function AppContent() {
   );
   const isMod = activeUser && (activeUser.rank === UserRank.ADMIN || activeUser.rank === UserRank.ELITE);
   const unreadNotifs = notifications.filter(n => !n.read).length;
+  const blockedUserIds = activeUser?.blockedUsers || [];
+
+  const handleBlockUser = async (userId: string, userName: string) => {
+    if (!activeUser) return;
+    if (!confirm(`Letiltod ${userName} felhasználót?`)) return;
+    const updated = { ...activeUser, blockedUsers: [...blockedUserIds, userId] };
+    await setDoc(doc(db, 'users', activeUser.id), updated);
+    toast(`${userName} letiltva`);
+  };
+
+  const filteredPosts = posts.filter(p => !blockedUserIds.includes(p.authorId));
+  const filteredEvents = events.filter(e => !blockedUserIds.includes(e.creatorId) && !Object.keys(e.rsvps).some(uid => blockedUserIds.includes(uid)));
+
+  const handleDeleteAccount = async () => {
+    if (!activeUser || !firebaseUser) return;
+    if (!confirm('Biztosan törlöd a fiókodat? Ez a művelet nem visszavonható!')) return;
+    try {
+      await deleteDoc(doc(db, 'users', activeUser.id));
+      await deleteUser(firebaseUser);
+      toast('Fiók törölve');
+    } catch (err: any) {
+      toast(`Hiba: ${err.message}`, 'error');
+    }
+  };
 
   // Achievement notification
   useEffect(() => {
@@ -320,7 +344,7 @@ function AppContent() {
       <div className="flex-1 flex flex-col min-h-0 relative">
         <div className="flex-1 min-h-0 relative">
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 size={32} className="text-brand-orange animate-spin" /></div>}>
-            {currentTab === 'feed' && <FeedSection posts={posts} users={users} currentUser={activeUser} onUpdatePosts={async (up) => {
+            {currentTab === 'feed' && <FeedSection posts={filteredPosts} users={users} currentUser={activeUser} onUpdatePosts={async (up) => {
               const deletedIds = posts.filter(op => !up.find(p => p.id === op.id)).map(p => p.id);
               for (const id of deletedIds) await deleteDoc(doc(db, 'posts', id));
               for (const p of up) {
@@ -351,9 +375,9 @@ function AppContent() {
                 const old = chats.find(oc => oc.id === c.id);
                 if (!old || JSON.stringify(old) !== JSON.stringify(c)) await setDoc(doc(db, 'chats', c.id), c);
               }
-            }} onReport={handleReport} />}
+            }} onReport={handleReport} onBlockUser={handleBlockUser} />}
 
-            {currentTab === 'events' && <EventsSection events={events} currentUser={activeUser} users={users} onUpdateEvents={async (ue) => {
+            {currentTab === 'events' && <EventsSection events={filteredEvents} currentUser={activeUser} users={users} onUpdateEvents={async (ue) => {
               const deletedIds = events.filter(oe => !ue.find(e => e.id === oe.id)).map(e => e.id);
               for (const id of deletedIds) await deleteDoc(doc(db, 'events', id));
               for (const e of ue) {
@@ -379,7 +403,7 @@ function AppContent() {
 
             {currentTab === 'leaderboard' && <LeaderboardSection users={users} currentUser={activeUser} />}
 
-            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} />}
+            {currentTab === 'profile' && <ProfileSection users={users} currentUser={activeUser} onUpdateCurrentUser={async (u) => await setDoc(doc(db, 'users', u.id), u)} onLogout={handleLogout} theme={theme} onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} onDeleteAccount={handleDeleteAccount} />}
 
             {currentTab === 'gallery' && <PhotoGallery events={events} onClose={() => setCurrentTab('events')} />}
 
