@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Camera, Loader2, X, ZoomIn, Flag, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Send, PlusCircle, Camera, Loader2, X, ZoomIn, Flag, Trash2, Share2 } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { FeedPost, UserProfile, UserRank, FeedComment } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -188,7 +188,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                   {post.hashtags.map(h => <span key={h} className="text-[10px] font-black text-brand-orange">#{h}</span>)}
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-border-subtle/50">
+                  <div className="flex items-center justify-between pt-2 border-t border-border-subtle/50">
                   <div className="flex items-center space-x-4">
                     <button onClick={() => handleLike(post.id)} className={`flex items-center space-x-1 transition-all active:scale-90 ${post.likes.includes(currentUser.id) ? 'text-red-500' : 'text-neutral-600 hover:text-neutral-400'}`}>
                       <Heart size={16} fill={post.likes.includes(currentUser.id) ? 'currentColor' : 'none'} />
@@ -197,6 +197,9 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                     <button onClick={() => setCommentInputs(prev => ({ ...prev, [post.id + '_open']: prev[post.id + '_open'] ? '' : 'true' }))} className="flex items-center space-x-1 text-neutral-600 hover:text-neutral-400 transition-all active:scale-90">
                       <MessageCircle size={16} />
                       <span className="text-[10px] font-black">{post.comments.length || ''}</span>
+                    </button>
+                    <button onClick={() => { const url = `${window.location.origin}/app/`; if (navigator.share) { navigator.share({ title: 'GYGYT Rideout', text: post.caption, url }).catch(() => {}); } else { navigator.clipboard?.writeText(url).catch(() => {}); } }} className="flex items-center space-x-1 text-neutral-600 hover:text-neutral-400 transition-all active:scale-90">
+                      <Share2 size={16} />
                     </button>
                   </div>
                   <button onClick={() => handleSave(post.id)} className={`transition-all active:scale-90 ${post.isSaved ? 'text-brand-orange' : 'text-neutral-600 hover:text-neutral-400'}`}>

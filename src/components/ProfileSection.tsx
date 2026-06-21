@@ -119,12 +119,10 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 max-w-[180px] mx-auto">
              {[
-               { icon: TrendingUp, label: 'KM', val: currentUser.stats.totalKm },
-               { icon: Compass, label: 'TÚRA', val: currentUser.stats.eventsJoined },
-               { icon: Target, label: 'SZINT', val: `+${currentUser.stats.elevationGainedM}m` }
-             ].map((s, i) => (
+                { icon: Compass, label: 'TÚRA', val: currentUser.stats.eventsJoined }
+              ].map((s, i) => (
                <div key={i} className="bg-bg-panel border border-border-subtle p-5 rounded-[32px] text-center shadow-lg">
                   <s.icon className="text-brand-orange/20 mx-auto mb-2" size={24} />
                   <p className="text-[8px] font-black text-neutral-600 uppercase tracking-widest">{s.label}</p>
@@ -145,7 +143,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
               {achievementsWithStatus.map(ach => (
                 <div key={ach.id} className={`flex flex-col items-center p-3 rounded-2xl border transition-all ${ach.hasUnlocked ? 'bg-brand-orange/10 border-brand-orange/30' : 'bg-black/40 border-border-subtle opacity-40'}`}>
                   <div className={`text-xl mb-1 ${ach.hasUnlocked ? '' : 'grayscale'}`}>
-                    {ach.id === 'first_ride' ? '🚴' : ach.id === '100_km' ? '🏅' : ach.id === '500_km' ? '🔥' : ach.id === '1000_km' ? '👑' : ach.id === 'event_master' ? '📅' : ach.id === 'photo_master' ? '📸' : ach.id === 'chat_legend' ? '💬' : '🛡️'}
+                    {ach.id === 'first_ride' ? '🚴' : ach.id === 'event_master' ? '📅' : ach.id === 'photo_master' ? '📸' : ach.id === 'chat_legend' ? '💬' : ach.id === 'veteran' ? '🛡️' : ach.id === 'social_butterfly' ? '🦋' : ach.id === 'night_rider' ? '🌙' : '🏆'}
                   </div>
                   {ach.hasUnlocked && <Check size={10} className="text-brand-orange" />}
                   <span className="text-[7px] font-black text-center leading-tight mt-0.5 text-white">{ach.title}</span>

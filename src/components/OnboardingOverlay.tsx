@@ -4,7 +4,7 @@ import { Bike, MessageSquare, Calendar, ChevronRight } from 'lucide-react';
 const slides = [
   {
     icon: Bike,
-    title: 'Üdv a GYGYT-ben!',
+    title: 'Üdv a GYGYT Rideout-ban!',
     desc: 'Ez a Gyogyós Gyerekek Társaságának privát kerékpáros közössége. Tekerj, csevegj, és oszd meg a kalandjaidat!',
   },
   {
@@ -15,7 +15,7 @@ const slides = [
   {
     icon: Calendar,
     title: 'Események & Rangok',
-    desc: 'Csatlakozz közös tekerésekhez, gyűjts kilométereket, és szerezz rangokat és kitüntetéseket!',
+    desc: 'Csatlakozz közös tekerésekhez, és szerezz rangokat és kitüntetéseket!',
   },
 ];
 

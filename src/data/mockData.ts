@@ -10,30 +10,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first_ride',
     title: 'Első Tekerés',
-    description: 'Sikeresen teljesítetted az első közös GYGYT gurulást!',
+    description: 'Sikeresen teljesítetted az első közös GYGYT Rideout gurulást!',
     iconName: 'Bike',
-    category: 'mileage'
-  },
-  {
-    id: '100_km',
-    title: '100 km Klub',
-    description: 'Tekerj le összesen legalább 100 kilométert!',
-    iconName: 'Award',
-    category: 'mileage'
-  },
-  {
-    id: '500_km',
-    title: '500 km Klub',
-    description: 'Átlépted az 500 kilométeres bűvös határt!',
-    iconName: 'Flame',
-    category: 'mileage'
-  },
-  {
-    id: '1000_km',
-    title: '1000 km Klub',
-    description: 'Eszméletlen! 1000 kilométer a GYGYT színeiben!',
-    iconName: 'Crown',
-    category: 'mileage'
+    category: 'events'
   },
   {
     id: 'event_master',
@@ -59,9 +38,23 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'veteran',
     title: 'Veterán Tag',
-    description: 'Már több mint egy éve tekersz a GYGYT csapatában.',
+    description: 'Már több mint egy éve tekersz a GYGYT Rideout csapatában.',
     iconName: 'ShieldAlert',
     category: 'legacy'
+  },
+  {
+    id: 'social_butterfly',
+    title: 'Társaság Lélek',
+    description: 'Vegyél részt 5 különböző eseményen.',
+    iconName: 'Users',
+    category: 'social'
+  },
+  {
+    id: 'night_rider',
+    title: 'Éjszakai Tekerő',
+    description: 'Csatlakozz egy esti/éjszakai tekeréshez.',
+    iconName: 'Moon',
+    category: 'events'
   }
 ];
 
@@ -72,13 +65,11 @@ export const INITIAL_USERS: UserProfile[] = [
     avatarUrl: DEFAULT_AVATAR,
     rank: UserRank.ADMIN,
     age: 0,
-    school: 'GYGYT HQ',
+    school: 'GYGYT Rideout HQ',
     joinedDate: new Date().toISOString().split('T')[0],
     achievements: [],
     stats: {
-      totalKm: 0,
-      eventsJoined: 0,
-      elevationGainedM: 0
+      eventsJoined: 0
     }
   }
 ];

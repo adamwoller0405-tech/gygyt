@@ -34,6 +34,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { AnnouncementBanner } from './components/AnnouncementBanner';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { ReportDialog } from './components/ReportDialog';
+import { BugReportDialog } from './components/BugReportDialog';
 import { Sidebar } from './components/Sidebar';
 import { SearchBar } from './components/SearchBar';
 import { LeaderboardSection } from './components/LeaderboardSection';
@@ -76,6 +77,7 @@ function AppContent() {
   const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'chat' | 'user'; id: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [showBugReport, setShowBugReport] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
@@ -116,7 +118,7 @@ function AppContent() {
             school: 'GYGYT HQ',
             joinedDate: new Date().toISOString().split('T')[0],
             achievements: [],
-            stats: { totalKm: 0, eventsJoined: 0, elevationGainedM: 0 }
+            stats: { eventsJoined: 0 }
           });
         }
       } else {
@@ -350,7 +352,7 @@ function AppContent() {
               }
             }} onUserStatsUpdate={async (uid, stats) => {
               await updateDoc(doc(db, 'users', uid), {
-                stats: { totalKm: stats.km, elevationGainedM: stats.elevation, eventsJoined: stats.events }
+                stats: { eventsJoined: stats.events }
               });
             }} />}
 
@@ -386,7 +388,7 @@ function AppContent() {
 
         <nav className="h-20 nav-safe-area bg-bg-panel border-t border-border-subtle flex items-center justify-around px-4 pb-4 relative z-30 shadow-2xl">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/5 text-[7px] text-neutral-600 font-black tracking-widest uppercase">
-            {'GYGYT Live v' + APP_VERSION}
+            {'GYGYT Rideout v' + APP_VERSION}
           </div>
 
           {[
@@ -426,6 +428,7 @@ function AppContent() {
         onClose={() => setSidebarOpen(false)}
         onNavigate={(tab) => setCurrentTab(tab as any)}
         onOpenSearch={() => setSearchOpen(true)}
+        onOpenBugReport={() => setShowBugReport(true)}
         theme={theme}
         onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
         unreadCount={unreadNotifs}
@@ -434,6 +437,8 @@ function AppContent() {
       />
 
       {searchOpen && <SearchBar users={users} posts={posts} events={events} onClose={() => setSearchOpen(false)} />}
+
+      {showBugReport && <BugReportDialog reporterId={activeUser?.id || ''} onClose={() => setShowBugReport(false)} />}
     </div>
   );
 }

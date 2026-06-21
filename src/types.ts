@@ -24,9 +24,7 @@ export interface UserProfile {
   joinedDate: string;
   achievements: string[]; // List of achievement IDs
   stats: {
-    totalKm: number;
     eventsJoined: number;
-    elevationGainedM: number;
   };
   isMuted?: boolean;
   isBanned?: boolean;
@@ -74,10 +72,6 @@ export interface CyclingEvent {
   description: string;
   dateTime: string;
   locationName: string; // E.g., Pilisvörösvár, Balatonfüred
-  coordinates: { lat: number; lng: number };
-  gpxRouteName: string; // E.g., "Pilis Kör", "Balatoni Kerülő"
-  distanceKm: number;
-  elevationGainM: number;
   difficulty: 'Könnyű' | 'Közepes' | 'Nehéz' | 'Extrém';
   type: 'Ride' | 'Race' | 'Meetup' | 'Social' | 'Maintenance';
   creatorId: string;

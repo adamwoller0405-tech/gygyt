@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
-import { Search, Link2, Clock, Trophy, Bell, Moon, Sun, ShieldAlert, X, ChevronRight } from 'lucide-react';
+import { Search, Link2, Clock, Trophy, Bell, Moon, Sun, ShieldAlert, X, ChevronRight, Bug } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (tab: string) => void;
   onOpenSearch: () => void;
+  onOpenBugReport: () => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
   unreadCount: number;
@@ -14,7 +15,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  isOpen, onClose, onNavigate, onOpenSearch,
+  isOpen, onClose, onNavigate, onOpenSearch, onOpenBugReport,
   theme, onToggleTheme, unreadCount, isMod, appVersion
 }) => {
   useEffect(() => {
@@ -70,9 +71,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="text-[8px] font-black uppercase tracking-widest text-neutral-600 bg-black/40 px-2 py-1 rounded-full">{theme === 'dark' ? '🌙' : '☀️'}</span>
           </button>
 
+          <button onClick={() => { onClose(); onOpenBugReport(); }} className="w-full flex items-center space-x-3 p-3.5 rounded-2xl hover:bg-white/5 transition-all text-left group">
+            <Bug size={20} className="text-yellow-500 shrink-0" />
+            <span className="text-sm font-bold text-neutral-200 group-hover:text-white transition-colors flex-1">Hibajelentés</span>
+            <ChevronRight size={14} className="text-neutral-600" />
+          </button>
+
+          <div className="border-t border-border-subtle my-3" />
+
           {isMod && (
             <>
-              <div className="border-t border-border-subtle my-3" />
               <button onClick={() => { onClose(); onNavigate('moderation'); }} className="w-full flex items-center space-x-3 p-3.5 rounded-2xl hover:bg-white/5 transition-all text-left group">
                 <ShieldAlert size={20} className="text-brand-orange shrink-0" />
                 <span className="text-sm font-bold text-neutral-200 group-hover:text-white transition-colors flex-1">Vezérlőpult</span>
@@ -83,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="px-6 py-4 border-t border-border-subtle">
-          <p className="text-[8px] text-neutral-600 font-black tracking-widest text-center">GYGYT Live v{appVersion}</p>
+          <p className="text-[8px] text-neutral-600 font-black tracking-widest text-center">GYGYT Rideout v{appVersion}</p>
         </div>
       </div>
     </>

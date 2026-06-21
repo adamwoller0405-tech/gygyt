@@ -15,7 +15,7 @@ export const ContactSection: React.FC = () => {
   const handleShare = async () => {
     const url = SITE_URL;
     if (navigator.share) {
-      try { await navigator.share({ title: 'GYGYT Tekerés', url }); } catch {}
+      try { await navigator.share({ title: 'GYGYT Rideout', url }); } catch {}
     } else {
       try { await navigator.clipboard.writeText(url); } catch {}
     }
@@ -33,7 +33,7 @@ export const ContactSection: React.FC = () => {
       <div className="p-6 space-y-5 max-w-lg mx-auto w-full pb-24">
         <div className="bg-bg-card rounded-[48px] p-8 border border-border-card shadow-2xl text-center">
           <div className="text-6xl mb-4">🚴</div>
-          <h3 className="text-xl font-black text-white uppercase tracking-tight">GYGYT Tekerés</h3>
+          <h3 className="text-xl font-black text-white uppercase tracking-tight">GYGYT Rideout <span className="text-[10px] text-yellow-500 ml-1">BÉTA</span></h3>
           <p className="text-xs text-neutral-500 mt-2 max-w-xs mx-auto leading-relaxed">
             Kövess minket a közösségi platformokon, és csatlakozz a beszélgetésekhez!
           </p>
@@ -62,7 +62,7 @@ export const ContactSection: React.FC = () => {
           className="w-full bg-bg-card border border-border-card rounded-3xl p-5 flex items-center justify-center space-x-3 shadow-lg hover:bg-white/5 transition-all active:scale-95"
         >
           <Share2 className="text-brand-orange" size={22} />
-          <span className="text-sm font-black text-white uppercase tracking-wider">GYGYT Link Megosztása</span>
+          <span className="text-sm font-black text-white uppercase tracking-wider">GYGYT Rideout Megosztása</span>
         </button>
 
         <div className="bg-bg-card border border-border-card rounded-[32px] p-6 shadow-lg text-center">

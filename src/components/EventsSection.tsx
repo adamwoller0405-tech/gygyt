@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Calendar, MapPin, Gauge, Mountain, Award, Users, PlusCircle, Check, HelpCircle, X, Camera, Trash2 } from 'lucide-react';
+import { Calendar, Award, Users, PlusCircle, Check, HelpCircle, X, Camera, Trash2 } from 'lucide-react';
 import { CyclingEvent, UserProfile, UserRank } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
 import { useToast } from './Toast';
@@ -15,7 +15,7 @@ interface EventsSectionProps {
   currentUser: UserProfile;
   users: UserProfile[];
   onUpdateEvents: (updatedEvents: CyclingEvent[]) => void;
-  onUserStatsUpdate?: (userId: string, stats: { km: number, elevation: number, events: number }) => void;
+  onUserStatsUpdate?: (userId: string, stats: { events: number }) => void;
 }
 
 export const EventsSection: React.FC<EventsSectionProps> = ({
@@ -31,9 +31,6 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
   const [description, setDescription] = useState('');
   const [dateTime, setDateTime] = useState('');
   const [locationName, setLocationName] = useState('');
-  const [gpxRouteName, setGpxRouteName] = useState('');
-  const [distanceKm, setDistanceKm] = useState('40');
-  const [elevationGainM, setElevationGainM] = useState('450');
   const [difficulty, setDifficulty] = useState<'Könnyű' | 'Közepes' | 'Nehéz' | 'Extrém'>('Közepes');
   const [type, setType] = useState<'Ride' | 'Race' | 'Meetup' | 'Social' | 'Maintenance'>('Ride');
   
@@ -60,26 +57,16 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
 
     onUpdateEvents(updated);
 
-    // Update real stats if status changed to/from 'going'
+    // Update event count if status changed to/from 'going'
     if (onUserStatsUpdate && oldStatus !== status) {
-        let kmChange = 0;
-        let elevChange = 0;
         let eventChange = 0;
-
         if (status === 'going') {
-            kmChange = event.distanceKm;
-            elevChange = event.elevationGainM;
             eventChange = 1;
         } else if (oldStatus === 'going') {
-            kmChange = -event.distanceKm;
-            elevChange = -event.elevationGainM;
             eventChange = -1;
         }
-
-        if (kmChange !== 0 || elevChange !== 0 || eventChange !== 0) {
+        if (eventChange !== 0) {
             onUserStatsUpdate(currentUser.id, {
-                km: currentUser.stats.totalKm + kmChange,
-                elevation: currentUser.stats.elevationGainedM + elevChange,
                 events: currentUser.stats.eventsJoined + eventChange
             });
         }
@@ -99,34 +86,12 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
     if (!isEditor) { toast('Nincs jogosultságod eseményt létrehozni!', 'error'); return; }
     if (!title.trim() || !dateTime || !locationName.trim()) return;
 
-    const coordsPreset: { [name: string]: { lat: number, lng: number } } = {
-      'dobogókő': { lat: 47.6844, lng: 18.8967 },
-      'margitsziget': { lat: 47.5255, lng: 19.0465 },
-      'balaton': { lat: 46.9560, lng: 17.8967 },
-      'dunakanyar': { lat: 47.7844, lng: 18.9612 },
-      'visegrád': { lat: 47.7840, lng: 18.9772 },
-      'normafa': { lat: 47.5028, lng: 18.9669 }
-    };
-
-    let selectedCoords = { lat: 47.4979, lng: 19.0402 };
-    const testKey = locationName.toLowerCase();
-    for (const key in coordsPreset) {
-      if (testKey.includes(key)) {
-        selectedCoords = coordsPreset[key];
-        break;
-      }
-    }
-
     const newEvent: CyclingEvent = {
       id: `event_${Date.now()}`,
       title,
       description,
       dateTime,
       locationName,
-      coordinates: selectedCoords,
-      gpxRouteName: gpxRouteName.trim() || `${locationName} Kör`,
-      distanceKm: Number(distanceKm) || 30,
-      elevationGainM: Number(elevationGainM) || 200,
       difficulty,
       type,
       creatorId: currentUser.id,
@@ -142,9 +107,6 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
     setDescription('');
     setDateTime('');
     setLocationName('');
-    setGpxRouteName('');
-    setDistanceKm('40');
-    setElevationGainM('450');
   };
 
   const handleAddPhoto = (eventId: string) => {
@@ -191,7 +153,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
       <div className="bg-bg-panel px-4 py-3 border-b border-border-subtle sticky top-0 z-20 flex items-center justify-between shadow-lg">
         <div className="flex items-center space-x-2">
           <Calendar className="text-brand-orange" size={18} />
-          <h2 className="text-sm font-black text-white uppercase tracking-tight">GYGYT Tekerés Naptár</h2>
+          <h2 className="text-sm font-black text-white uppercase tracking-tight">GYGYT Rideout Naptár <span className="text-[8px] text-yellow-500 ml-1">BÉTA</span></h2>
         </div>
 
         {isEditor && (
@@ -266,23 +228,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
 
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="bg-black/50 p-3 rounded-2xl border border-border-subtle flex items-center space-x-3 shadow-inner">
-                      <Gauge className="text-brand-orange" size={16} />
-                      <div>
-                        <p className="text-[8px] text-neutral-500 uppercase font-black tracking-tighter">Távolság</p>
-                        <p className="font-bold text-neutral-100 font-mono">{ev.distanceKm} km</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-black/50 p-3 rounded-2xl border border-border-subtle flex items-center space-x-3 shadow-inner">
-                      <Mountain className="text-brand-orange" size={16} />
-                      <div>
-                        <p className="text-[8px] text-neutral-500 uppercase font-black tracking-tighter">Szint</p>
-                        <p className="font-bold text-neutral-100 font-mono">+{ev.elevationGainM} m</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-black/50 p-3 rounded-2xl border border-border-subtle flex items-center space-x-3 shadow-inner">
-                      <MapPin className="text-brand-orange" size={16} />
+                      <Calendar className="text-brand-orange" size={16} />
                       <div className="truncate">
                         <p className="text-[8px] text-neutral-500 uppercase font-black tracking-tighter">Helyszín</p>
                         <p className="font-bold text-neutral-100 truncate">{ev.locationName}</p>
@@ -296,11 +242,6 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                         <p className="font-black">{ev.difficulty}</p>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="text-[10px] bg-black/80 border border-brand-orange/10 p-3 rounded-2xl flex items-center justify-between font-mono">
-                    <span className="text-neutral-500 font-bold uppercase tracking-tighter">GPX Útvonal:</span>
-                    <span className="text-brand-orange font-black truncate ml-2">🧭 {ev.gpxRouteName}</span>
                   </div>
 
                   {/* Gallery */}
@@ -494,28 +435,6 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Táv (km)</label>
-                  <input
-                    type="number"
-                    value={distanceKm}
-                    onChange={(e) => setDistanceKm(e.target.value)}
-                    className="w-full bg-black border border-border-subtle rounded-2xl px-3 py-3 text-neutral-200 outline-none focus:border-brand-orange transition-all"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Szintemelkedés (m)</label>
-                  <input
-                    type="number"
-                    value={elevationGainM}
-                    onChange={(e) => setElevationGainM(e.target.value)}
-                    className="w-full bg-black border border-border-subtle rounded-2xl px-3 py-3 text-neutral-200 outline-none focus:border-brand-orange transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Típus</label>
                   <select
                     value={type}
@@ -543,17 +462,6 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                     <option value="Extrém">Extrém</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Útvonal Neve / GPX link</label>
-                <input
-                  type="text"
-                  placeholder="pl. Pilis-kanyar"
-                  value={gpxRouteName}
-                  onChange={(e) => setGpxRouteName(e.target.value)}
-                  className="w-full bg-black border border-border-subtle rounded-2xl px-4 py-3 text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all"
-                />
               </div>
 
               <div className="flex space-x-3 pt-4">

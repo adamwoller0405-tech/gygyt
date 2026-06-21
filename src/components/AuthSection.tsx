@@ -48,7 +48,7 @@ export const AuthSection: React.FC<AuthSectionProps> = ({ onLogin, onRegister })
           <div className="w-20 h-20 bg-brand-orange/10 rounded-[32px] flex items-center justify-center mx-auto text-brand-orange border border-brand-orange/20 shadow-2xl animate-bounce">
             <Bike size={40} />
           </div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">GYGYT <span className="text-brand-orange">HUB</span></h2>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">GYGYT <span className="text-brand-orange">Rideout</span> <span className="text-[8px] text-yellow-500">BÉTA</span></h2>
         </div>
 
         <div className="flex bg-black p-1 rounded-2xl border border-border-subtle">

@@ -33,7 +33,7 @@ async function initDb() {
       school TEXT,
       joinedDate TEXT,
       achievements TEXT DEFAULT '[]',
-      stats TEXT DEFAULT '{"totalKm":0,"eventsJoined":0,"elevationGainedM":0}',
+      stats TEXT DEFAULT '{"eventsJoined":0}',
       isMuted INTEGER DEFAULT 0,
       isBanned INTEGER DEFAULT 0
     )
@@ -61,10 +61,6 @@ async function initDb() {
       description TEXT DEFAULT '',
       dateTime TEXT,
       locationName TEXT,
-      coordinates TEXT DEFAULT '{"lat":47.4979,"lng":19.0402}',
-      gpxRouteName TEXT DEFAULT '',
-      distanceKm REAL DEFAULT 0,
-      elevationGainM REAL DEFAULT 0,
       difficulty TEXT DEFAULT 'Közepes',
       type TEXT DEFAULT 'Ride',
       creatorId TEXT,
@@ -111,8 +107,8 @@ async function initDb() {
       'Kovács Gyurka',
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       'ADMIN', 19, 'BME - Villamosmérnöki Kar', '2025-03-12',
-      JSON.stringify(['first_ride', '100_km', '500_km', '1000_km', 'event_master', 'chat_legend', 'veteran']),
-      JSON.stringify({ totalKm: 1240, eventsJoined: 18, elevationGainedM: 14200 })
+      JSON.stringify(['first_ride', 'event_master', 'chat_legend', 'veteran']),
+      JSON.stringify({ eventsJoined: 18 })
     ]);
   }
 
@@ -163,7 +159,7 @@ function rowToPost(row: Row) {
 }
 
 function rowToEvent(row: Row) {
-  return { ...row, coordinates: jsonParse(row.coordinates, {}), rsvps: jsonParse(row.rsvps, {}), photos: jsonParse(row.photos, []) };
+  return { ...row, rsvps: jsonParse(row.rsvps, {}), photos: jsonParse(row.photos, []) };
 }
 
 function rowToChat(row: Row) {
@@ -249,10 +245,9 @@ app.get('/api/events', (_, res) => {
 app.post('/api/events', (req, res) => {
   const e = req.body;
   const id = e.id || `event_${Date.now()}`;
-  run(`INSERT INTO events (id, title, description, dateTime, locationName, coordinates, gpxRouteName, distanceKm, elevationGainM, difficulty, type, creatorId, creatorName, rsvps, photos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-    id, e.title, e.description || '', e.dateTime, e.locationName,
-    JSON.stringify(e.coordinates || {}), e.gpxRouteName || '', e.distanceKm || 0, e.elevationGainM || 0,
-    e.difficulty || 'Közepes', e.type || 'Ride', e.creatorId, e.creatorName,
+  run(`INSERT INTO events (id, title, description, dateTime, locationName, difficulty, type, creatorId, creatorName, rsvps, photos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+    e.id, e.title, e.description, e.dateTime, e.locationName,
+    e.difficulty, e.type, e.creatorId, e.creatorName,
     JSON.stringify(e.rsvps || {}), JSON.stringify(e.photos || [])
   ]);
   const created = queryOne('SELECT * FROM events WHERE id = ?', [id])!;
@@ -261,9 +256,8 @@ app.post('/api/events', (req, res) => {
 
 app.put('/api/events/:id', (req, res) => {
   const e = req.body;
-  run(`UPDATE events SET title=?, description=?, dateTime=?, locationName=?, coordinates=?, gpxRouteName=?, distanceKm=?, elevationGainM=?, difficulty=?, type=?, rsvps=?, photos=? WHERE id=?`, [
+  run(`UPDATE events SET title=?, description=?, dateTime=?, locationName=?, difficulty=?, type=?, rsvps=?, photos=? WHERE id=?`, [
     e.title, e.description || '', e.dateTime, e.locationName,
-    JSON.stringify(e.coordinates || {}), e.gpxRouteName || '', e.distanceKm || 0, e.elevationGainM || 0,
     e.difficulty || 'Közepes', e.type || 'Ride',
     JSON.stringify(e.rsvps || {}), JSON.stringify(e.photos || []), req.params.id
   ]);

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0A0A0A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>GYGYT Tekerés – Közösség & Kaland</title>
+  <title>GYGYT Tekerés (BÉTA) – Közösség & Kaland</title>
   <meta name="description" content="Csatlakozz a GYGYT kerékpáros közösséghez! Tekerj együtt, oszd meg élményeid, fedezz fel új útvonalakat.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚴</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -333,7 +333,6 @@
       <!-- Stats -->
       <div class="stats-bar reveal visible delay-4">
         <div class="stat-item"><div class="num" id="stat-members">0</div><div class="label">Tag</div></div>
-        <div class="stat-item"><div class="num" id="stat-km">0</div><div class="label">Kilométer</div></div>
         <div class="stat-item"><div class="num" id="stat-events">0</div><div class="label">Tekerés</div></div>
       </div>
     </div>
@@ -426,7 +425,7 @@
         <div class="feature-card reveal delay-1"><span class="icon">💬</span><h4>Chat</h4><p>Beszélgess a közösséggel, ossz meg tippeket, szervezkedjetek.</p></div>
         <div class="feature-card reveal delay-2"><span class="icon">📸</span><h4>Galéria</h4><p>Nézd meg a tekerések fotóit, és örökítsd meg a pillanatokat.</p></div>
         <div class="feature-card reveal delay-2"><span class="icon">🏆</span><h4>Rangok</h4><p>Szerezz kitűzőket, fejlődj és érd el a magasabb rangokat.</p></div>
-        <div class="feature-card reveal delay-3"><span class="icon">📊</span><h4>Statisztika</h4><p>Kövesd a megtett kilométereket, szintemelkedést és részvételt.</p></div>
+        <div class="feature-card reveal delay-3"><span class="icon">📊</span><h4>Statisztika</h4><p>Kövesd a részvételed és a ranglétrán elfoglalt helyed.</p></div>
         <div class="feature-card reveal delay-3"><span class="icon">📰</span><h4>Hírfolyam</h4><p>Oszd meg a gondolataid, képeid és legyél a közösség aktív tagja.</p></div>
         <div class="feature-card reveal delay-4"><span class="icon">📅</span><h4>Naptár</h4><p>Lásd egy tekintettel a havi eseményeket egy gyönyörű naptárban.</p></div>
         <div class="feature-card reveal delay-4"><span class="icon">🔗</span><h4>Kapcsolat</h4><p>Kövesd a GYGYT-t TikTokon, Instagramon, Discordon és még több platformon!</p></div>
@@ -510,7 +509,7 @@
   <!-- ───────────────────── FOOTER ───────────────────── -->
   <footer>
     <div class="container">
-      <p>&copy; 2026 <a href="/app/">GYGYT Tekerés</a> &mdash; Minden jog fenntartva.</p>
+      <p>&copy; 2026 <a href="/app/">GYGYT Tekerés (BÉTA)</a> &mdash; Minden jog fenntartva.</p>
       <p style="margin-top: 4px;">🚴 Fenntartva &amp; szeretettel, a GYGYT közösség által</p>
     </div>
   </footer>
@@ -637,17 +636,11 @@
           db.collection('users').get(),
           db.collection('events').get()
         ]);
-        let totalKm = 0;
-        usersSnap.forEach(doc => {
-          const data = doc.data();
-          if (data.stats && data.stats.totalKm) totalKm += data.stats.totalKm;
-        });
         const statsObs = new IntersectionObserver((entries) => {
           entries.forEach(e => {
             if (e.isIntersecting) {
               const activeMembers = usersSnap.docs.filter(d => !d.data().isBanned).length;
               animateCounter(document.getElementById('stat-members'), activeMembers);
-              animateCounter(document.getElementById('stat-km'), Math.round(totalKm));
               animateCounter(document.getElementById('stat-events'), eventsSnap.size);
               statsObs.unobserve(e.target);
             }
@@ -657,7 +650,6 @@
       } catch (err) {
         console.warn('Firebase stat betöltési hiba:', err);
         animateCounter(document.getElementById('stat-members'), 0);
-        animateCounter(document.getElementById('stat-km'), 0);
         animateCounter(document.getElementById('stat-events'), 0);
       }
     }

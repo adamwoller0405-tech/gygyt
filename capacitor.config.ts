@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'hu.gygyt.app',
-  appName: 'GYGYT Tekerés',
+  appName: 'GYGYT Rideout',
   webDir: 'dist'
 };
 

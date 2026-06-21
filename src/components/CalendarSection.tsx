@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Bike, MapPin, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bike, Users } from 'lucide-react';
 import { CyclingEvent } from '../types';
 
 const DAYS = ['H', 'K', 'Sze', 'Cs', 'P', 'Szo', 'V'];
@@ -99,8 +99,7 @@ export const CalendarSection: React.FC<Props> = ({ events }) => {
             <div key={e.id} className="bg-bg-card border border-border-card rounded-3xl p-4 space-y-2 shadow-xl">
               <h4 className="text-sm font-black text-white">{e.title}</h4>
               <div className="flex flex-wrap gap-3 text-[10px] text-neutral-400 font-bold">
-                <span className="flex items-center gap-1"><MapPin size={12} />{e.locationName}</span>
-                <span className="flex items-center gap-1"><Bike size={12} />{e.distanceKm} km</span>
+                <span className="flex items-center gap-1"><Bike size={12} />{e.locationName}</span>
                 <span className="flex items-center gap-1"><Users size={12} />{Object.values(e.rsvps).filter(v => v === 'going').length} megy</span>
               </div>
               <p className="text-xs text-neutral-500">{e.description}</p>
