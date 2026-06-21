@@ -27,10 +27,10 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
 }) => {
   const { toast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [dateTime, setDateTime] = useState('');
-  const [locationName, setLocationName] = useState('');
+  const [title, setTitle] = useState(() => localStorage.getItem('draft_event_title') || '');
+  const [description, setDescription] = useState(() => localStorage.getItem('draft_event_desc') || '');
+  const [dateTime, setDateTime] = useState(() => localStorage.getItem('draft_event_date') || '');
+  const [locationName, setLocationName] = useState(() => localStorage.getItem('draft_event_location') || '');
   const [difficulty, setDifficulty] = useState<'Könnyű' | 'Közepes' | 'Nehéz' | 'Extrém'>('Közepes');
   const [type, setType] = useState<'Ride' | 'Race' | 'Meetup' | 'Social' | 'Maintenance'>('Ride');
   const [maxParticipants, setMaxParticipants] = useState<number>(0);
@@ -109,6 +109,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
     setDateTime('');
     setLocationName('');
     setMaxParticipants(0);
+    ['draft_event_title', 'draft_event_desc', 'draft_event_date', 'draft_event_location'].forEach(k => localStorage.removeItem(k));
   };
 
   const handleAddPhoto = (eventId: string) => {
@@ -398,25 +399,25 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
             <form onSubmit={handleCreateEvent} className="space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Tekerés megnevezése</label>
-                <input
-                  type="text"
-                  placeholder="pl. Dobogókő Csúcstámadás ⛰️"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-black border border-border-subtle rounded-2xl px-4 py-3 text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all"
-                  required
-                />
+                  <input
+                    type="text"
+                    placeholder="pl. Dobogókő Csúcstámadás ⛰️"
+                    value={title}
+                    onChange={(e) => { setTitle(e.target.value); localStorage.setItem('draft_event_title', e.target.value); }}
+                    className="w-full bg-black border border-border-subtle rounded-2xl px-4 py-3 text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all"
+                    required
+                  />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Részletek (opcionális)</label>
-                <textarea
-                  placeholder="Útvonal, tempó, pihenők..."
-                  rows={2}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-black border border-border-subtle rounded-2xl p-4 text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all"
-                />
+                  <textarea
+                    placeholder="Útvonal, tempó, pihenők..."
+                    rows={2}
+                    value={description}
+                    onChange={(e) => { setDescription(e.target.value); localStorage.setItem('draft_event_desc', e.target.value); }}
+                    className="w-full bg-black border border-border-subtle rounded-2xl p-4 text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all"
+                  />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -425,7 +426,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                   <input
                     type="datetime-local"
                     value={dateTime}
-                    onChange={(e) => setDateTime(e.target.value)}
+                    onChange={(e) => { setDateTime(e.target.value); localStorage.setItem('draft_event_date', e.target.value); }}
                     className="w-full bg-black border border-border-subtle rounded-2xl px-3 py-3 text-neutral-200 outline-none focus:border-brand-orange transition-all"
                     required
                   />
@@ -437,7 +438,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                     type="text"
                     placeholder="pl. Margitsziget"
                     value={locationName}
-                    onChange={(e) => setLocationName(e.target.value)}
+                    onChange={(e) => { setLocationName(e.target.value); localStorage.setItem('draft_event_location', e.target.value); }}
                     className="w-full bg-black border border-border-subtle rounded-2xl px-3 py-3 text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all"
                     required
                   />

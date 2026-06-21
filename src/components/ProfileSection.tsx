@@ -25,6 +25,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(currentUser.name);
   const [editAvatar, setEditAvatar] = useState(currentUser.avatarUrl);
+  const [editFlair, setEditFlair] = useState(currentUser.flair || '');
   const [isUploading, setIsUploading] = useState(false);
 
   const handleUploadAvatar = async () => {
@@ -45,7 +46,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   };
 
   const handleSaveProfile = () => {
-    const updated = { ...currentUser, name: editName, avatarUrl: editAvatar };
+    const updated = { ...currentUser, name: editName, avatarUrl: editAvatar, flair: editFlair || undefined };
     onUpdateCurrentUser(updated);
     setIsEditing(false);
   };
@@ -105,6 +106,14 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
                     className="w-full bg-black border border-border-subtle rounded-3xl px-5 py-3 text-center text-lg font-black text-white focus:border-brand-orange outline-none"
                     placeholder="Név"
                   />
+                  <input
+                    type="text"
+                    value={editFlair}
+                    onChange={(e) => setEditFlair(e.target.value)}
+                    className="w-full bg-black border border-border-subtle rounded-3xl px-5 py-3 text-center text-xs font-bold text-yellow-400 focus:border-brand-orange outline-none"
+                    placeholder="Egyedi címke (pl. 🏆 Hegymenő)"
+                    maxLength={20}
+                  />
                   <button onClick={handleSaveProfile} className="w-full bg-brand-orange text-black font-black p-4 rounded-3xl shadow-lg flex items-center justify-center space-x-2">
                     <Save size={18} />
                     <span>Mentés</span>
@@ -113,7 +122,8 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
               ) : (
                 <div className="text-center">
                   <h3 className="text-2xl font-black text-white uppercase tracking-tight leading-none">{currentUser.name}</h3>
-                  <span className="text-[10px] font-black uppercase tracking-[4px] text-brand-orange mt-3 inline-block bg-brand-orange/10 px-4 py-1 rounded-full">{currentUser.rank}</span>
+                  {currentUser.flair && <span className="text-[9px] font-black text-yellow-400 bg-yellow-400/10 px-3 py-1 rounded-full mt-2 inline-block">{currentUser.flair}</span>}
+                  <span className="text-[10px] font-black uppercase tracking-[4px] text-brand-orange mt-2 inline-block bg-brand-orange/10 px-4 py-1 rounded-full">{currentUser.rank}</span>
                 </div>
               )}
             </div>

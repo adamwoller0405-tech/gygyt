@@ -32,6 +32,7 @@ import { auth, db } from './lib/firebase';
 import { AuthSection } from './components/AuthSection';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AnnouncementBanner } from './components/AnnouncementBanner';
+import { EventReminderBanner } from './components/EventReminderBanner';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { ReportDialog } from './components/ReportDialog';
 import { BugReportDialog } from './components/BugReportDialog';
@@ -300,10 +301,11 @@ function AppContent() {
     <div className="flex flex-col h-dynamic w-full bg-bg-deep text-neutral-100 overflow-hidden font-sans">
       <OfflineBanner />
       <AnnouncementBanner />
+      <EventReminderBanner events={events} currentUser={activeUser} />
       <div className="flex-1 flex flex-col min-h-0 relative">
         <div className="flex-1 min-h-0 relative">
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 size={32} className="text-brand-orange animate-spin" /></div>}>
-            {currentTab === 'feed' && <FeedSection posts={posts} currentUser={activeUser} onUpdatePosts={async (up) => {
+            {currentTab === 'feed' && <FeedSection posts={posts} users={users} currentUser={activeUser} onUpdatePosts={async (up) => {
               const deletedIds = posts.filter(op => !up.find(p => p.id === op.id)).map(p => p.id);
               for (const id of deletedIds) await deleteDoc(doc(db, 'posts', id));
               for (const p of up) {

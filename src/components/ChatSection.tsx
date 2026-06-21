@@ -394,6 +394,10 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                         <div className="flex items-center space-x-1.5 mb-1 ml-1">
                           <span className="text-xs font-black text-white leading-none">{msg.senderName}</span>
                           <span className="text-[7px] font-black text-brand-orange uppercase">{msg.senderRank}</span>
+                          {(() => {
+                            const sender = users.find(u => u.id === msg.senderId);
+                            return sender?.flair ? <span className="text-[6px] font-black text-yellow-400 bg-yellow-400/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">{sender.flair}</span> : null;
+                          })()}
                         </div>
                       )}
                       {msg.repliedTo && (

@@ -14,6 +14,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 interface FeedSectionProps {
   posts: FeedPost[];
   currentUser: UserProfile;
+  users: UserProfile[];
   onUpdatePosts: (updatedPosts: FeedPost[]) => void;
   onReport?: (type: 'post' | 'chat' | 'user', id: string) => void;
 }
@@ -21,13 +22,14 @@ interface FeedSectionProps {
 export const FeedSection: React.FC<FeedSectionProps> = ({
   posts,
   currentUser,
+  users,
   onUpdatePosts,
   onReport
 }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all');
   const [showNewPostModal, setShowNewPostModal] = useState(false);
-  const [newPostCaption, setNewPostCaption] = useState('');
-  const [newPostMediaUrl, setNewPostMediaUrl] = useState('');
+  const [newPostCaption, setNewPostCaption] = useState(() => localStorage.getItem('draft_post_caption') || '');
+  const [newPostMediaUrl, setNewPostMediaUrl] = useState(() => localStorage.getItem('draft_post_media') || '');
   const [isUploading, setIsUploading] = useState(false);
   const [isMediaVideo, setIsMediaVideo] = useState(false);
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
@@ -51,6 +53,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
         const blob = await response.blob();
         const url = await uploadMedia(blob);
         setNewPostMediaUrl(url);
+        localStorage.setItem('draft_post_media', url);
         setIsMediaVideo(url.includes('/video/upload/') || url.endsWith('.mp4'));
       }
     } catch (err) { console.error(err); } finally { setIsUploading(false); }
@@ -119,6 +122,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
     onUpdatePosts([newPost, ...posts]);
     setNewPostCaption('');
     setNewPostMediaUrl('');
+    localStorage.removeItem('draft_post_caption');
+    localStorage.removeItem('draft_post_media');
     setShowNewPostModal(false);
   };
 
@@ -151,9 +156,15 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
               <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <img src={post.authorAvatar} className="w-10 h-10 rounded-full object-cover border border-white/5" alt="" />
-                  <div>
+                    <div>
                     <p className="text-xs font-black text-white leading-none">{post.authorName}</p>
-                    <span className="text-[8px] font-black text-brand-orange tracking-widest uppercase">{post.authorRank}</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[8px] font-black text-brand-orange tracking-widest uppercase">{post.authorRank}</span>
+                      {(() => {
+                        const author = users.find(u => u.id === post.authorId);
+                        return author?.flair ? <span className="text-[6px] font-black text-yellow-400 bg-yellow-400/10 px-1.5 py-0.5 rounded-full">{author.flair}</span> : null;
+                      })()}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -265,14 +276,14 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
 
             <textarea
               value={newPostCaption}
-              onChange={(e) => setNewPostCaption(e.target.value)}
+              onChange={(e) => { setNewPostCaption(e.target.value); localStorage.setItem('draft_post_caption', e.target.value); }}
               className="w-full bg-black border border-border-subtle rounded-3xl p-5 text-xs text-white outline-none focus:border-brand-orange"
               placeholder="Írj valamit..."
               rows={3}
             />
 
             <div className="flex gap-4">
-              <button onClick={() => setShowNewPostModal(false)} className="flex-1 py-4 rounded-3xl text-[10px] font-black uppercase text-neutral-500 hover:text-white transition-all">Mégse</button>
+              <button onClick={() => { setShowNewPostModal(false); }} className="flex-1 py-4 rounded-3xl text-[10px] font-black uppercase text-neutral-500 hover:text-white transition-all">Mégse</button>
               <button onClick={handleCreatePost} disabled={!newPostMediaUrl || !newPostCaption.trim()} className="flex-1 bg-brand-orange text-black font-black py-4 rounded-3xl text-[10px] uppercase shadow-lg disabled:opacity-50">Megosztás</button>
             </div>
           </div>

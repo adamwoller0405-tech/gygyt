@@ -28,6 +28,7 @@ export interface UserProfile {
   };
   isMuted?: boolean;
   isBanned?: boolean;
+  flair?: string;
 }
 
 export interface JoinRequest {
