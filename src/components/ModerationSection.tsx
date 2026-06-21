@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Check, X, ShieldX, Volume2, VolumeX, UserCheck, Trash2, ShieldCheck, ChevronRight, Award, PlusCircle, Loader2, Key, Save, Search, Users, AlertTriangle, Upload, Bug } from 'lucide-react';
+import { ShieldAlert, Check, X, ShieldX, Volume2, VolumeX, UserCheck, Trash2, ShieldCheck, ChevronRight, Award, PlusCircle, Loader2, Key, Save, Search, Users, AlertTriangle, Upload, Bug, RotateCcw } from 'lucide-react';
 import { JoinRequest, UserProfile, UserRank } from '../types';
 import { DEFAULT_AVATAR } from '../lib/defaults';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -557,27 +557,58 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
 
 const BugReportsList: React.FC = () => {
   const [localReports, setLocalReports] = useState<any[]>([]);
-  useEffect(() => {
+  const [showDone, setShowDone] = useState(false);
+  const loadReports = () => {
     try {
       const saved = localStorage.getItem('gygyt_bug_reports');
       setLocalReports(saved ? JSON.parse(saved) : []);
     } catch { setLocalReports([]); }
-  }, []);
+  };
+  useEffect(loadReports, []);
+  const toggleDone = (idx: number) => {
+    const report = localReports[idx];
+    if (!report) return;
+    report.done = !report.done;
+    localStorage.setItem('gygyt_bug_reports', JSON.stringify(localReports));
+    loadReports();
+  };
   if (localReports.length === 0) return null;
+  const active = localReports.filter((r: any) => !r.done);
+  const done = localReports.filter((r: any) => r.done);
+  const visible = showDone ? localReports : active;
   return (
     <div className="bg-bg-card rounded-2xl border border-border-card p-4 space-y-3">
-      <div className="flex items-center space-x-2 mb-2">
-        <Bug size={14} className="text-yellow-500" />
-        <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500">Hibajelentések ({localReports.length})</h3>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center space-x-2">
+          <Bug size={14} className="text-yellow-500" />
+          <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500">Hibajelentések ({active.length})</h3>
+        </div>
+        {done.length > 0 && (
+          <button onClick={() => setShowDone(!showDone)} className={`text-[8px] font-black uppercase tracking-wider ${showDone ? 'text-neutral-400' : 'text-neutral-600'}`}>
+            {showDone ? 'Aktív' : `Kész (${done.length})`}
+          </button>
+        )}
       </div>
       <div className="space-y-2 max-h-48 overflow-y-auto">
-        {localReports.slice().reverse().map((r: any, i: number) => (
-          <div key={i} className="bg-black/40 rounded-2xl p-3 border border-border-subtle">
-            <p className="text-[10px] font-bold text-white">{r.title}</p>
-            <p className="text-[8px] text-neutral-400 mt-1 line-clamp-2">{r.description}</p>
-            <p className="text-[7px] text-neutral-600 mt-1">{new Date(r.createdAt).toLocaleDateString('hu-HU')}</p>
-          </div>
-        ))}
+        {visible.length === 0 ? (
+          <p className="text-[9px] text-neutral-500 text-center py-4">Minden hibajelentés lezárva! 🎉</p>
+        ) : visible.slice().reverse().map((r: any, i: number) => {
+          const realIdx = localReports.indexOf(r);
+          return (
+            <div key={i} className={`rounded-2xl p-3 border ${r.done ? 'bg-green-500/5 border-green-500/10' : 'bg-black/40 border-border-subtle'}`}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-white">{r.title}</p>
+                  <p className="text-[8px] text-neutral-400 mt-1 line-clamp-2">{r.description}</p>
+                  <p className="text-[7px] text-neutral-600 mt-1">{new Date(r.createdAt).toLocaleDateString('hu-HU')}</p>
+                </div>
+                <button onClick={() => toggleDone(realIdx)} className={`ml-2 p-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${r.done ? 'bg-green-500/20 text-green-400' : 'bg-black text-neutral-500 hover:text-white'}`} aria-label={r.done ? 'Visszaállítás' : 'Kész'}>
+                  {r.done ? <RotateCcw size={12} /> : <Check size={12} />}
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
