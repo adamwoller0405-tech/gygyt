@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShieldAlert, Check, X, ShieldX, Volume2, VolumeX, UserCheck, Trash2, ShieldCheck, ChevronRight, Award, PlusCircle, Loader2, Key, Save, Search, Users, AlertTriangle, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldAlert, Check, X, ShieldX, Volume2, VolumeX, UserCheck, Trash2, ShieldCheck, ChevronRight, Award, PlusCircle, Loader2, Key, Save, Search, Users, AlertTriangle, Upload, Bug } from 'lucide-react';
 import { JoinRequest, UserProfile, UserRank } from '../types';
 import { DEFAULT_AVATAR } from '../lib/defaults';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -498,6 +498,9 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
             </div>
           </div>
 
+          {/* Bug Reports */}
+          <BugReportsList />
+
           {/* Backup / Restore */}
           <div className="bg-bg-card rounded-2xl border border-border-card p-4 space-y-3">
             <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500 mb-3">Adat Biztonsági Mentés</h3>
@@ -548,6 +551,34 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
         confirmLabel="Eltávolítás"
         onConfirm={() => { if (kickConfirmUser && onDeleteUser) { onDeleteUser(kickConfirmUser.id); onUpdateUsers(users.filter(u => u.id !== kickConfirmUser.id)); toast(`${kickConfirmUser.name} eltávolítva!`, 'warning'); setSelectedUserToEdit(null); setKickConfirmUser(null); } }}
         onCancel={() => setKickConfirmUser(null)} />
+    </div>
+  );
+};
+
+const BugReportsList: React.FC = () => {
+  const [localReports, setLocalReports] = useState<any[]>([]);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('gygyt_bug_reports');
+      setLocalReports(saved ? JSON.parse(saved) : []);
+    } catch { setLocalReports([]); }
+  }, []);
+  if (localReports.length === 0) return null;
+  return (
+    <div className="bg-bg-card rounded-2xl border border-border-card p-4 space-y-3">
+      <div className="flex items-center space-x-2 mb-2">
+        <Bug size={14} className="text-yellow-500" />
+        <h3 className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500">Hibajelentések ({localReports.length})</h3>
+      </div>
+      <div className="space-y-2 max-h-48 overflow-y-auto">
+        {localReports.slice().reverse().map((r: any, i: number) => (
+          <div key={i} className="bg-black/40 rounded-2xl p-3 border border-border-subtle">
+            <p className="text-[10px] font-bold text-white">{r.title}</p>
+            <p className="text-[8px] text-neutral-400 mt-1 line-clamp-2">{r.description}</p>
+            <p className="text-[7px] text-neutral-600 mt-1">{new Date(r.createdAt).toLocaleDateString('hu-HU')}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
