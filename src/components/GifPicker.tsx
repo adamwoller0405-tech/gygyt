@@ -13,7 +13,7 @@ export const GifPicker: React.FC<Props> = ({ onSelect, onClose }) => {
   const [gifs, setGifs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mountedRef = useRef(true);
 
   useEffect(() => {

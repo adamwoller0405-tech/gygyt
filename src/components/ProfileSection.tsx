@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2, Ban, Mail } from 'lucide-react';
+import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2, Ban, Mail, UserCheck } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { UserProfile, CyclingEvent } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
+import { useToast } from './Toast';
 import { ACHIEVEMENTS } from '../data/mockData';
 
 interface ProfileSectionProps {
@@ -25,8 +26,10 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   onLogout,
   onDeleteAccount,
   theme = 'dark',
-  onToggleTheme
+  onToggleTheme,
+  onToggleEmailNotifs
 }) => {
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(currentUser.name);
   const [editAvatar, setEditAvatar] = useState(currentUser.avatarUrl);

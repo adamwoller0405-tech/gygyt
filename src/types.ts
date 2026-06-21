@@ -95,7 +95,7 @@ export interface CyclingEvent {
   polls?: {
     question: string;
     options: { text: string; votes: string[] }[];
-  };
+  }[];
 }
 
 export interface FeedPost {

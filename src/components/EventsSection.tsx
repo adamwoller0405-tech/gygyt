@@ -116,7 +116,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
         [currentUser.id]: 'going'
       },
       maxParticipants: maxParticipants > 0 ? maxParticipants : undefined,
-      polls: poll ? [poll] : undefined
+      polls: poll ? [poll] : undefined,
     };
 
     onUpdateEvents([...events, newEvent]);

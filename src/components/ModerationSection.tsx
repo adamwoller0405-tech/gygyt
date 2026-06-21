@@ -34,6 +34,8 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
   currentUser,
   onUpdateJoinRequests,
   onUpdateUsers,
+  onUpdateEvents,
+  onUpdatePosts,
   onDeleteUser
 }) => {
   const { toast } = useToast();
