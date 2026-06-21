@@ -80,6 +80,7 @@ export interface CyclingEvent {
     [userId: string]: 'going' | 'maybe' | 'not_going';
   };
   photos?: string[]; // Media uploaded after event
+  maxParticipants?: number;
 }
 
 export interface FeedPost {

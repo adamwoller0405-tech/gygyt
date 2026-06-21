@@ -33,7 +33,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
   const [locationName, setLocationName] = useState('');
   const [difficulty, setDifficulty] = useState<'Könnyű' | 'Közepes' | 'Nehéz' | 'Extrém'>('Közepes');
   const [type, setType] = useState<'Ride' | 'Race' | 'Meetup' | 'Social' | 'Maintenance'>('Ride');
-  
+  const [maxParticipants, setMaxParticipants] = useState<number>(0);
   const [selectedEventIdForPhoto, setSelectedEventIdForPhoto] = useState<string | null>(null);
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<string | null>(null);
@@ -98,7 +98,8 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
       creatorName: currentUser.name,
       rsvps: {
         [currentUser.id]: 'going'
-      }
+      },
+      maxParticipants: maxParticipants > 0 ? maxParticipants : undefined
     };
 
     onUpdateEvents([...events, newEvent]);
@@ -107,6 +108,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
     setDescription('');
     setDateTime('');
     setLocationName('');
+    setMaxParticipants(0);
   };
 
   const handleAddPhoto = (eventId: string) => {
@@ -181,6 +183,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
             const maybeCount = rsvpEntries.filter(([_, status]) => status === 'maybe').length;
             const notGoingCount = rsvpEntries.filter(([_, status]) => status === 'not_going').length;
             const myRsvp = ev.rsvps ? ev.rsvps[currentUser.id] : undefined;
+            const isFull = ev.maxParticipants ? goingCount >= ev.maxParticipants : false;
 
             return (
               <div 
@@ -300,6 +303,11 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                       <div className="font-mono text-[9px] font-bold space-x-3">
                         <span className="text-green-400">MEGY: {goingCount}</span>
                         <span className="text-yellow-500">TALÁN: {maybeCount}</span>
+                        {ev.maxParticipants && (
+                          <span className={`${isFull ? 'text-red-400' : 'text-neutral-400'}`}>
+                            {isFull ? 'TELT' : `${ev.maxParticipants - goingCount} szabad`}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -328,14 +336,17 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                   <div className="pt-2 border-t border-border-subtle/50 flex gap-2 text-[10px] font-black uppercase tracking-widest select-none">
                     <button
                       onClick={() => handleRsvp(ev.id, 'going')}
+                      disabled={isFull && myRsvp !== 'going'}
                       className={`flex-1 py-2.5 rounded-2xl flex items-center justify-center space-x-2 border transition-all active:scale-95 ${
                         myRsvp === 'going'
                           ? 'bg-green-500/10 text-green-400 border-green-500/40 shadow-inner'
+                          : isFull
+                          ? 'bg-black/50 text-neutral-700 border-border-subtle cursor-not-allowed'
                           : 'bg-black text-neutral-500 border-border-subtle hover:text-neutral-300'
                       }`}
                     >
                       <Check size={14} />
-                      <span>Megyek</span>
+                      <span>{isFull && myRsvp !== 'going' ? 'Tele' : 'Megyek'}</span>
                     </button>
 
                     <button
@@ -462,6 +473,18 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                     <option value="Extrém">Extrém</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Max. létszám (0 = korlátlan)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="999"
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(parseInt(e.target.value) || 0)}
+                  className="w-full bg-black border border-border-subtle rounded-2xl px-4 py-3 text-neutral-200 outline-none focus:border-brand-orange transition-all"
+                />
               </div>
 
               <div className="flex space-x-3 pt-4">

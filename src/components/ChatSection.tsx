@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Hash, Send, Camera, Loader2, Flag, Trash2, Edit3, Smile, MessageSquare, ChevronLeft, Users, Search, X } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Hash, Send, Camera, Loader2, Flag, Trash2, Edit3, Smile, MessageSquare, ChevronLeft, Users, Search, X, RotateCcw, Filter } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { ChatMessage, UserProfile, UserRank } from '../types';
 import { useToast } from './Toast';
@@ -45,6 +45,12 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
   const [activeTab, setActiveTab] = useState<'servers' | 'dms'>('servers');
   const [showNewDm, setShowNewDm] = useState(false);
   const [dmSearch, setDmSearch] = useState('');
+  const [undoMsgId, setUndoMsgId] = useState<string | null>(null);
+  const [undoTimer, setUndoTimer] = useState<number>(5);
+  const [chatSearchOpen, setChatSearchOpen] = useState(false);
+  const [chatSearchQuery, setChatSearchQuery] = useState('');
+  const undoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,6 +63,22 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
   useEffect(() => {
     if (editMsgId && editInputRef.current) editInputRef.current.focus();
   }, [editMsgId]);
+
+  // Mark messages as read when viewing a channel
+  useEffect(() => {
+    const unread = chats.filter(c =>
+      c.channelId === activeChannel &&
+      !c.readBy?.includes(currentUser.id) &&
+      c.senderId !== currentUser.id
+    );
+    if (unread.length === 0) return;
+    const updated = chats.map(c =>
+      c.channelId === activeChannel && !c.readBy?.includes(currentUser.id)
+        ? { ...c, readBy: [...(c.readBy || []), currentUser.id] }
+        : c
+    );
+    onUpdateChats(updated);
+  }, [activeChannel]);
 
   const availableChannels = CHANNELS.filter(ch => canAccessChannel(currentUser.rank, ch.id));
 
@@ -79,6 +101,27 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
     const partner = getDmPartner(chId);
     return { id: chId, partner };
   });
+
+  const clearUndo = useCallback(() => {
+    if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    undoIntervalRef.current = null;
+    undoTimeoutRef.current = null;
+    setUndoMsgId(null);
+    setUndoTimer(5);
+  }, []);
+
+  useEffect(() => {
+    return () => clearUndo();
+  }, [clearUndo]);
+
+  const handleUndo = () => {
+    if (undoMsgId) {
+      onUpdateChats(chats.filter(c => c.id !== undoMsgId));
+      toast('Üzenet visszavonva');
+      clearUndo();
+    }
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +149,14 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
     onUpdateChats([...chats, newMessage]);
     setMessageText('');
     setShowEmojiPicker(false);
+
+    clearUndo();
+    setUndoMsgId(newMessage.id);
+    setUndoTimer(5);
+    undoIntervalRef.current = setInterval(() => {
+      setUndoTimer(t => { if (t <= 1) { clearUndo(); return 0; } return t - 1; });
+    }, 1000);
+    undoTimeoutRef.current = setTimeout(() => clearUndo(), 5000);
   };
 
   const handleUploadMedia = async () => {
@@ -157,7 +208,14 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
     setSidebarOpen(false);
   };
 
-  const currentChatMessages = chats.filter(c => c.channelId === activeChannel);
+  const currentChatMessages = useMemo(() => {
+    const channelMsgs = chats.filter(c => c.channelId === activeChannel);
+    if (!chatSearchQuery.trim()) return channelMsgs;
+    const q = chatSearchQuery.toLowerCase();
+    return channelMsgs.filter(m =>
+      (m.content?.toLowerCase().includes(q) || m.senderName?.toLowerCase().includes(q)) && !m.isDeleted
+    );
+  }, [chats, activeChannel, chatSearchQuery]);
 
   const currentChannelName = CHANNELS.find(ch => ch.id === activeChannel)?.name || (activeChannel.startsWith('dm_') ? getDmPartner(activeChannel)?.name || 'Ismeretlen' : 'Csevegés');
 
@@ -279,12 +337,41 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
               {activeChannel.startsWith('dm_') ? 'Privát üzenet' : `#${activeChannel}`}
             </p>
           </div>
+          <button onClick={() => setChatSearchOpen(!chatSearchOpen)} className={`p-2 rounded-xl transition-all ${chatSearchOpen ? 'bg-brand-orange/20 text-brand-orange' : 'text-neutral-500 hover:text-white'}`}>
+            <Search size={16} />
+          </button>
           {replyMessage && (
             <button onClick={() => setReplyMessage(null)} className="text-[9px] text-neutral-500 hover:text-white px-2 py-1 rounded-lg bg-black/40 border border-border-subtle transition-all">
               Válasz törlése
             </button>
           )}
         </div>
+
+        {chatSearchOpen && (
+          <div className="px-4 py-2 bg-bg-panel border-b border-border-subtle animate-slide-up">
+            <div className="relative max-w-md mx-auto">
+              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+              <input
+                autoFocus
+                type="text"
+                value={chatSearchQuery}
+                onChange={(e) => setChatSearchQuery(e.target.value)}
+                placeholder="Üzenetek keresése..."
+                className="w-full bg-black border border-border-subtle rounded-xl pl-8 pr-8 py-2 text-[11px] text-white placeholder-neutral-700 outline-none focus:border-brand-orange"
+              />
+              {chatSearchQuery && (
+                <button onClick={() => setChatSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white">
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+            {chatSearchQuery && (
+              <p className="text-[8px] text-neutral-500 font-bold mt-1.5 text-center">
+                {currentChatMessages.length} találat
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-3.5 space-y-4 scroll-smooth max-w-2xl mx-auto w-full" ref={scrollRef}>
@@ -362,6 +449,11 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                       <button onClick={() => setReplyMessage(msg)} className="text-neutral-600 hover:text-white transition-all opacity-0 group-hover:opacity-100"><MessageSquare size={10} /></button>
                     )}
                     <span className="text-[8px] text-neutral-500 font-mono">{new Date(msg.timestamp).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}</span>
+                    {isOwn && !isDeleted && msg.readBy && msg.readBy.length > 1 && (
+                      <span className="text-[7px] text-blue-400 font-black tracking-wider" title={msg.readBy.filter(id => id !== currentUser.id).length + ' másik olvasta'}>
+                        LÁTVA
+                      </span>
+                    )}
                     {onReport && !isDeleted && (
                       <button onClick={() => onReport('chat', msg.id)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Flag size={10} /></button>
                     )}
@@ -390,6 +482,18 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                 <button key={emoji} onClick={() => handleEmojiPick(emoji)} className="text-2xl hover:scale-125 transition-transform active:scale-95">{emoji}</button>
               ))}
             </div>
+          </div>
+        )}
+
+        {undoMsgId && (
+          <div className="px-4 py-2 bg-bg-panel border-t border-border-subtle flex items-center justify-between animate-slide-up">
+            <span className="text-[10px] text-neutral-400">
+              <span className="font-bold text-brand-orange">Visszavonás</span> ({undoTimer}s)
+            </span>
+            <button onClick={handleUndo} className="flex items-center space-x-1 text-[10px] font-black text-white bg-brand-orange/20 hover:bg-brand-orange/30 px-3 py-1.5 rounded-xl transition-all active:scale-95">
+              <RotateCcw size={12} />
+              <span>VISSZA</span>
+            </button>
           </div>
         )}
 
