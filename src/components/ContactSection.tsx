@@ -4,11 +4,11 @@ import { Link2, Share2 } from 'lucide-react';
 const SITE_URL = 'https://gygyt.pages.dev';
 
 const links = [
-  { label: 'TikTok', url: 'https://tiktok.com/@gygyttekeres', icon: '🎵', color: 'from-pink-500 to-purple-600' },
-  { label: 'Instagram', url: 'https://instagram.com/gygyttekeres', icon: '📸', color: 'from-purple-500 to-orange-500' },
-  { label: 'Facebook', url: 'https://facebook.com/gygyttekeres', icon: '👍', color: 'from-blue-600 to-blue-800' },
+  { label: 'TikTok', url: 'https://tiktok.com/@gygytrideout', icon: '🎵', color: 'from-pink-500 to-purple-600' },
+  { label: 'Instagram', url: 'https://instagram.com/gygytrideout', icon: '📸', color: 'from-purple-500 to-orange-500' },
+  { label: 'Facebook', url: 'https://facebook.com/gygytrideout', icon: '👍', color: 'from-blue-600 to-blue-800' },
   { label: 'Discord', url: 'https://discord.gg/gygyt', icon: '💬', color: 'from-indigo-500 to-indigo-700' },
-  { label: 'YouTube', url: 'https://youtube.com/@gygyttekeres', icon: '▶️', color: 'from-red-600 to-red-800' },
+  { label: 'YouTube', url: 'https://youtube.com/@gygytrideout', icon: '▶️', color: 'from-red-600 to-red-800' },
 ];
 
 export const ContactSection: React.FC = () => {

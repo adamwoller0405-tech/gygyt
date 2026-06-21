@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">GYGYT Tekerés</string>
-    <string name="title_activity_main">GYGYT Tekerés</string>
+    <string name="app_name">GYGYT Rideout</string>
+    <string name="title_activity_main">GYGYT Rideout</string>
     <string name="package_name">hu.gygyt.app</string>
     <string name="custom_url_scheme">hu.gygyt.app</string>
 </resources>

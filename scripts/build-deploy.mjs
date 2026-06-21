@@ -66,7 +66,7 @@ if (fs.existsSync(path.resolve(LANDING, 'index.html'))) {
 } else {
   // Fallback: redirect to SPA
   fs.writeFileSync(path.resolve(DIST, 'index.html'),
-    '<!DOCTYPE html><html lang="hu"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/app/"><title>GYGYT Tekerés</title></head><body></body></html>');
+    '<!DOCTYPE html><html lang="hu"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/app/"><title>GYGYT Rideout</title></head><body></body></html>');
 }
 
 if (fs.existsSync(path.resolve(LANDING, 'downloads'))) {
