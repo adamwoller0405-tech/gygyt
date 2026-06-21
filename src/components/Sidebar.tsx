@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div className="border-t border-border-subtle my-3" />
 
-          <button onClick={() => { onClose(); }} className="w-full flex items-center space-x-3 p-3.5 rounded-2xl hover:bg-white/5 transition-all text-left group">
+          <button onClick={() => { onClose(); onNavigate('profile'); }} className="w-full flex items-center space-x-3 p-3.5 rounded-2xl hover:bg-white/5 transition-all text-left group">
             <div className="relative shrink-0">
               <Bell size={20} className="text-brand-orange" />
               {unreadCount > 0 && (

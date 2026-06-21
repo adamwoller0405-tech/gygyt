@@ -247,7 +247,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             })()}
           </div>
 
-          <button onClick={() => { const url = `${window.location.origin}/app/?user=${currentUser.id}`; if (navigator.share) { navigator.share({ title: `GYGYT Rideout — ${currentUser.name}`, url }).catch(() => {}); } else { navigator.clipboard?.writeText(url).catch(() => {}); } }} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">
+          <button onClick={async () => { const url = `${window.location.origin}/app/?user=${currentUser.id}`; if (navigator.share) { try { await navigator.share({ title: `GYGYT Rideout — ${currentUser.name}`, text: `Nézd meg ${currentUser.name} profilját a GYGYT Rideout-on!`, url }); } catch {} } else { try { await navigator.clipboard?.writeText(url); toast('Profil link másolva!'); } catch { toast('Link másolás sikertelen', 'error'); } } }} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">
             <Share2 size={18} className="text-brand-orange" />
             <span className="text-xs font-black text-white uppercase tracking-wider">Profil Megosztása</span>
           </button>

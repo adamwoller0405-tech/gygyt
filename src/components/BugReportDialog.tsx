@@ -19,20 +19,18 @@ export const BugReportDialog: React.FC<Props> = ({ reporterId, onClose }) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
     setSending(true);
+    const report = { title: title.trim(), description: description.trim(), reportedBy: reporterId, createdAt: new Date().toISOString(), status: 'open' };
     try {
-      await addDoc(collection(db, 'bugReports'), {
-        title: title.trim(),
-        description: description.trim(),
-        reportedBy: reporterId,
-        createdAt: new Date().toISOString(),
-        status: 'open',
-      });
+      await addDoc(collection(db, 'bugReports'), report);
       toast('Hibajelentés elküldve! Köszönjük a segítséged.');
-      onClose();
     } catch (err: any) {
-      toast(`Hiba: ${err.message}`, 'error');
+      const existing = JSON.parse(localStorage.getItem('gygyt_bug_reports') || '[]');
+      existing.push(report);
+      localStorage.setItem('gygyt_bug_reports', JSON.stringify(existing));
+      toast('Hibajelentés elmentve helyben! (Firestore hozzáférési hiba)');
     } finally {
       setSending(false);
+      onClose();
     }
   };
 

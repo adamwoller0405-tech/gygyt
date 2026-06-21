@@ -27,7 +27,7 @@ import {
 } from 'firebase/firestore';
 import { enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, type User } from 'firebase/auth';
-import { auth, db, showBrowserNotification, requestNotificationPermission } from './lib/firebase';
+import { auth, db, showBrowserNotification, requestNotificationPermission, handleRedirectResult } from './lib/firebase';
 
 import { AuthSection } from './components/AuthSection';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -102,6 +102,7 @@ function AppContent() {
     if (typeof window !== 'undefined' && !localStorage.getItem('gygyt_onboarding_done')) {
       setShowOnboarding(true);
     }
+    handleRedirectResult().catch(() => {});
   }, []);
 
   useEffect(() => {

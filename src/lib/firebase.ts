@@ -4,7 +4,7 @@
  */
 
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
@@ -39,6 +39,24 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
 export const onForegroundMessage = (cb: (payload: any) => void) => {
   if (!messaging) return () => {};
   return onMessage(messaging, cb);
+};
+
+export const isMobile = () => /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+export const signInWithGoogle = async () => {
+  if (isMobile()) {
+    await signInWithRedirect(auth, googleProvider);
+    return null;
+  }
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
+};
+
+export const handleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    return result?.user || null;
+  } catch { return null; }
 };
 
 export const showBrowserNotification = (title: string, options?: NotificationOptions) => {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bike, ArrowRight } from 'lucide-react';
-import { signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { sendPasswordResetEmail, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider, signInWithGoogle, isMobile } from '../lib/firebase';
 import { useToast } from './Toast';
 
 interface AuthSectionProps {
@@ -24,7 +24,12 @@ export const AuthSection: React.FC<AuthSectionProps> = ({ onLogin, onRegister })
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      if (isMobile()) {
+        toast('Google átirányítás...', 'warning');
+        await signInWithGoogle();
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
     } catch (err: any) {
       toast(`Google Login hiba: ${err.message}`, 'error');
     }
