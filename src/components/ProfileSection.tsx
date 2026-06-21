@@ -133,16 +133,25 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 max-w-[180px] mx-auto">
-             {[
-                { icon: Compass, label: 'TÚRA', val: currentUser.stats.eventsJoined }
-              ].map((s, i) => (
-               <div key={i} className="bg-bg-panel border border-border-subtle p-5 rounded-[32px] text-center shadow-lg">
-                  <s.icon className="text-brand-orange/20 mx-auto mb-2" size={24} />
-                  <p className="text-[8px] font-black text-neutral-600 uppercase tracking-widest">{s.label}</p>
-                  <p className="text-sm font-black text-white mt-1 font-mono">{s.val}</p>
-               </div>
-             ))}
+          <div className="grid grid-cols-3 gap-3 max-w-[280px] mx-auto">
+             {(() => {
+               const userEvents = events.filter(e => Object.keys(e.rsvps).some(k => e.rsvps[k] === 'going' && k === currentUser.id));
+               const now = new Date();
+               const thisMonth = userEvents.filter(e => { const d = new Date(e.dateTime); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+               const thisYear = userEvents.filter(e => { const d = new Date(e.dateTime); return d.getFullYear() === now.getFullYear(); });
+               const total = userEvents.length;
+               return [
+                 { icon: Compass, label: 'E HÓNAP', val: thisMonth.length },
+                 { icon: TrendingUp, label: 'E ÉV', val: thisYear.length },
+                 { icon: Award, label: 'ÖSSZES', val: total },
+               ].map((s, i) => (
+                <div key={i} className="bg-bg-panel border border-border-subtle p-4 rounded-[32px] text-center shadow-lg">
+                   <s.icon className="text-brand-orange/20 mx-auto mb-2" size={22} />
+                   <p className="text-[7px] font-black text-neutral-600 uppercase tracking-widest">{s.label}</p>
+                   <p className="text-sm font-black text-white mt-1 font-mono">{s.val}</p>
+                </div>
+               ));
+             })()}
           </div>
 
           <div className="bg-bg-card rounded-[32px] p-6 border border-border-card shadow-lg space-y-4">

@@ -31,6 +31,8 @@ export interface UserProfile {
   flair?: string;
   blockedUsers?: string[];
   typingIn?: { channelId: string; lastTypedAt: string };
+  modNote?: string;
+  warnings?: { reason: string; date: string; warnedBy: string }[];
 }
 
 export interface JoinRequest {

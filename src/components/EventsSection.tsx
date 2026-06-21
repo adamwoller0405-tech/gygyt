@@ -10,6 +10,7 @@ import { BadgeRenderer } from './BadgeRenderer';
 import { useToast } from './Toast';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PullToRefresh } from './PullToRefresh';
+import { WeatherDisplay } from './WeatherDisplay';
 
 interface EventsSectionProps {
   events: CyclingEvent[];
@@ -256,6 +257,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                         hour: '2-digit',
                         minute: '2-digit'
                       })}</span>
+                      <WeatherDisplay locationName={ev.locationName} dateTime={ev.dateTime} />
                     </div>
                   </div>
 

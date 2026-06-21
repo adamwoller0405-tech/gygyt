@@ -250,6 +250,20 @@ function AppContent() {
     }
   };
 
+  // Deep linking
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const userParam = params.get('user');
+    const tabParam = params.get('tab');
+    if (tabParam && ['feed', 'chat', 'events', 'calendar', 'contact', 'leaderboard', 'profile', 'moderation', 'gallery'].includes(tabParam)) {
+      setCurrentTab(tabParam as any);
+    }
+    if (userParam && firebaseUser) {
+      const target = users.find(u => u.id === userParam);
+      if (target) setCurrentTab('profile');
+    }
+  }, [firebaseUser?.uid]);
+
   // Achievement notification
   useEffect(() => {
     if (!activeUser) return;

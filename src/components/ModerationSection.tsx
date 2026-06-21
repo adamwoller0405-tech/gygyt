@@ -309,6 +309,41 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
               </div>
             </div>
 
+            {/* Mod Note */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500 ml-1">Mod Megjegyzés</label>
+              <div className="flex items-center space-x-2">
+                <input type="text" value={selectedUserToEdit.modNote || ''} onChange={(e) => {
+                  const updated = { ...selectedUserToEdit, modNote: e.target.value || undefined };
+                  onUpdateUsers(users.map(u => u.id === selectedUserToEdit.id ? updated : u));
+                  setSelectedUserToEdit(updated);
+                }} placeholder="Privát megjegyzés..."
+                  className="flex-1 bg-black border border-border-subtle rounded-2xl px-4 py-3 text-xs text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange" />
+              </div>
+            </div>
+
+            {/* Warnings */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500 ml-1">Figyelmeztetések ({(selectedUserToEdit.warnings || []).length})</label>
+              {(selectedUserToEdit.warnings || []).map((w, i) => (
+                <div key={i} className="bg-red-500/5 border border-red-500/10 rounded-2xl p-3">
+                  <p className="text-[9px] text-red-300 font-bold">{w.reason}</p>
+                  <p className="text-[7px] text-neutral-500 mt-1">— {w.warnedBy}, {new Date(w.date).toLocaleDateString('hu-HU')}</p>
+                </div>
+              ))}
+              <button onClick={() => {
+                const reason = prompt('Figyelmeztetés oka:');
+                if (!reason?.trim()) return;
+                const warning = { reason: reason.trim(), date: new Date().toISOString(), warnedBy: currentUser.name };
+                const updated = { ...selectedUserToEdit, warnings: [...(selectedUserToEdit.warnings || []), warning] };
+                onUpdateUsers(users.map(u => u.id === selectedUserToEdit.id ? updated : u));
+                setSelectedUserToEdit(updated);
+                toast(`Figyelmeztetés elküldve ${selectedUserToEdit.name}-nek`);
+              }} className="w-full p-3 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 text-[9px] font-black uppercase tracking-widest flex items-center justify-center space-x-2 hover:bg-red-500/10 transition-all">
+                <AlertTriangle size={14} /><span>+ Figyelmeztetés</span>
+              </button>
+            </div>
+
             {/* Achievements */}
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-[3px] text-neutral-500 ml-1">Kitüntetések Adományozása</label>
