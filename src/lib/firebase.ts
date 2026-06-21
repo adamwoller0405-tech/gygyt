@@ -6,6 +6,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB0JIVV4aDW0DWz3rsdLmTkZrfN_FhVxLQ",
@@ -21,6 +22,29 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
+
+let messaging: ReturnType<typeof getMessaging> | null = null;
+try { messaging = getMessaging(app); } catch {}
+
+export const requestNotificationPermission = async (): Promise<string | null> => {
+  if (!messaging || !('Notification' in window)) return null;
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return null;
+    const token = await getToken(messaging, { vapidKey: 'BIPUfD1q7s3oCNJQKStAV3a6i90Q3WtKd7qL5jRqx_mMqVY3mhXHgeG8JmO_c74VC7F2vXXas_HUFmYqDTUAYGM' });
+    return token;
+  } catch { return null; }
+};
+
+export const onForegroundMessage = (cb: (payload: any) => void) => {
+  if (!messaging) return () => {};
+  return onMessage(messaging, cb);
+};
+
+export const showBrowserNotification = (title: string, options?: NotificationOptions) => {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try { new Notification(title, { icon: '/logo.svg', badge: '/logo.svg', ...options }); } catch {}
+};
 
 /**
  * CLOUDINARY CONFIGURATION (100% FREE / NO CREDIT CARD)

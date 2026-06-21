@@ -35,6 +35,8 @@ export interface UserProfile {
   modNote?: string;
   warnings?: { reason: string; date: string; warnedBy: string }[];
   emailNotifs?: boolean;
+  fcmToken?: string;
+  notificationsEnabled?: boolean;
 }
 
 export interface JoinRequest {

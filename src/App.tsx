@@ -27,7 +27,7 @@ import {
 } from 'firebase/firestore';
 import { enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, type User } from 'firebase/auth';
-import { auth, db } from './lib/firebase';
+import { auth, db, showBrowserNotification, requestNotificationPermission } from './lib/firebase';
 
 import { AuthSection } from './components/AuthSection';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -265,6 +265,34 @@ function AppContent() {
       if (target) setCurrentTab('profile');
     }
   }, [firebaseUser?.uid]);
+
+  // Push notification permission
+  useEffect(() => {
+    if (!activeUser || activeUser.notificationsEnabled) return;
+    const timer = setTimeout(async () => {
+      if (!('Notification' in window)) return;
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        const updated = { ...activeUser, notificationsEnabled: true };
+        await setDoc(doc(db, 'users', activeUser.id), updated);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [activeUser?.id]);
+
+  // Browser notifications for new app notifications
+  const prevNotifCount = useRef(notifications.length);
+  useEffect(() => {
+    if (!activeUser?.notificationsEnabled) return;
+    if (notifications.length > prevNotifCount.current && notifications.length > 0) {
+      const latest = notifications[0];
+      if (!latest.read && latest.fromName) {
+        const msgs: Record<string, string> = { like: 'kedvelte a bejegyzésed', comment: 'hozzászólt a bejegyzésedhez', event_rsvp: 'válaszolt az eseményedre' };
+        showBrowserNotification('GYGYT Rideout', { body: `${latest.fromName} ${msgs[latest.type] || 'értesítés'}` });
+      }
+    }
+    prevNotifCount.current = notifications.length;
+  }, [notifications]);
 
   // Achievement notification
   useEffect(() => {
