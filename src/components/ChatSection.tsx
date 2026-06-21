@@ -3,6 +3,7 @@ import { Hash, Send, Camera, Loader2, Flag, Trash2, Edit3, Smile, MessageSquare,
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { ChatMessage, UserProfile, UserRank } from '../types';
 import { useToast } from './Toast';
+import { checkRateLimit } from '../lib/rateLimit';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PullToRefresh } from './PullToRefresh';
 
@@ -135,6 +136,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
     e.preventDefault();
     if (!messageText.trim()) return;
     if (currentUser.isMuted) { toast('Néma üzemmódban vagy!', 'warning'); return; }
+    if (!checkRateLimit(`chat_${currentUser.id}`, 20, 60000)) { toast('Túl sok üzenet! Várj egy kicsit.', 'warning'); return; }
 
     const newMessage: ChatMessage = {
       id: `message_${Date.now()}`,
@@ -248,7 +250,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
         {/* Sidebar Header */}
         <div className="px-4 py-4 border-b border-border-subtle flex items-center justify-between">
           <h2 className="text-xs font-black text-white uppercase tracking-widest">GYGYT Rideout</h2>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-neutral-500 hover:text-white"><X size={18} /></button>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-neutral-500 hover:text-white" aria-label="Bezárás"><X size={18} aria-hidden="true" /></button>
         </div>
 
         {/* Tabs: Szerverek / DM */}
@@ -343,8 +345,8 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <div className="bg-bg-panel border-b border-border-subtle px-4 py-3 flex items-center space-x-3 shadow-lg">
-          <button onClick={() => setSidebarOpen(true)} className="md:hidden text-neutral-500 hover:text-white transition-colors">
-            <ChevronLeft size={20} />
+          <button onClick={() => setSidebarOpen(true)} className="md:hidden text-neutral-500 hover:text-white transition-colors" aria-label="Navigáció">
+            <ChevronLeft size={20} aria-hidden="true" />
           </button>
           <Hash size={18} className="text-brand-orange shrink-0" />
           <div className="flex-1 min-w-0">
@@ -353,8 +355,8 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
               {activeChannel.startsWith('dm_') ? 'Privát üzenet' : `#${activeChannel}`}
             </p>
           </div>
-          <button onClick={() => setChatSearchOpen(!chatSearchOpen)} className={`p-2 rounded-xl transition-all ${chatSearchOpen ? 'bg-brand-orange/20 text-brand-orange' : 'text-neutral-500 hover:text-white'}`}>
-            <Search size={16} />
+          <button onClick={() => setChatSearchOpen(!chatSearchOpen)} className={`p-2 rounded-xl transition-all ${chatSearchOpen ? 'bg-brand-orange/20 text-brand-orange' : 'text-neutral-500 hover:text-white'}`} aria-label="Keresés">
+            <Search size={16} aria-hidden="true" />
           </button>
           {replyMessage && (
             <button onClick={() => setReplyMessage(null)} className="text-[9px] text-neutral-500 hover:text-white px-2 py-1 rounded-lg bg-black/40 border border-border-subtle transition-all">
@@ -376,8 +378,8 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                 className="w-full bg-black border border-border-subtle rounded-xl pl-8 pr-8 py-2 text-[11px] text-white placeholder-neutral-700 outline-none focus:border-brand-orange"
               />
               {chatSearchQuery && (
-                <button onClick={() => setChatSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white">
-                  <X size={12} />
+                <button onClick={() => setChatSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white" aria-label="Keresés törlése">
+                  <X size={12} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -493,12 +495,12 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                   <div className="flex items-center space-x-2 mt-1 px-1">
                     {isOwn && !isDeleted && editMsgId !== msg.id && (
                       <>
-                        <button onClick={() => handleStartEdit(msg)} className="text-neutral-600 hover:text-white transition-all opacity-0 group-hover:opacity-100"><Edit3 size={10} /></button>
-                        <button onClick={() => setDeleteConfirmMsg(msg)} className="text-neutral-600 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Trash2 size={10} /></button>
+                        <button onClick={() => handleStartEdit(msg)} className="text-neutral-600 hover:text-white transition-all opacity-0 group-hover:opacity-100" aria-label="Szerkesztés"><Edit3 size={10} aria-hidden="true" /></button>
+                        <button onClick={() => setDeleteConfirmMsg(msg)} className="text-neutral-600 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100" aria-label="Törlés"><Trash2 size={10} aria-hidden="true" /></button>
                       </>
                     )}
                     {!isOwn && !isDeleted && (
-                      <button onClick={() => setReplyMessage(msg)} className="text-neutral-600 hover:text-white transition-all opacity-0 group-hover:opacity-100"><MessageSquare size={10} /></button>
+                      <button onClick={() => setReplyMessage(msg)} className="text-neutral-600 hover:text-white transition-all opacity-0 group-hover:opacity-100" aria-label="Válasz"><MessageSquare size={10} aria-hidden="true" /></button>
                     )}
                     <span className="text-[8px] text-neutral-500 font-mono">{new Date(msg.timestamp).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}</span>
                     {isOwn && !isDeleted && msg.readBy && msg.readBy.length > 1 && (
@@ -507,10 +509,10 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                       </span>
                     )}
                     {!isOwn && !isDeleted && onBlockUser && (
-                      <button onClick={() => onBlockUser(msg.senderId, msg.senderName)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Ban size={10} /></button>
+                      <button onClick={() => onBlockUser(msg.senderId, msg.senderName)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100" aria-label="Letiltás"><Ban size={10} aria-hidden="true" /></button>
                     )}
                     {onReport && !isDeleted && (
-                      <button onClick={() => onReport('chat', msg.id)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"><Flag size={10} /></button>
+                      <button onClick={() => onReport('chat', msg.id)} className="text-neutral-700 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100" aria-label="Jelentés"><Flag size={10} aria-hidden="true" /></button>
                     )}
                   </div>
                   </div>
@@ -547,7 +549,7 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
               <span className="font-bold text-neutral-300">Válasz {replyMessage.senderName}-nek: </span>
               {replyMessage.content}
             </div>
-            <button onClick={() => setReplyMessage(null)} className="text-neutral-600 hover:text-white"><X size={14} /></button>
+            <button onClick={() => setReplyMessage(null)} className="text-neutral-600 hover:text-white" aria-label="Bezárás"><X size={14} aria-hidden="true" /></button>
           </div>
         )}
 
@@ -592,11 +594,11 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
             </div>
           )}
           <form onSubmit={handleSendMessage} className="flex items-center space-x-2 max-w-2xl mx-auto">
-            <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center">
-              <Smile size={18} />
+            <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center" aria-label="Emoji">
+              <Smile size={18} aria-hidden="true" />
             </button>
-            <button type="button" onClick={handleUploadMedia} disabled={isUploading} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center">
-              {isUploading ? <Loader2 className="animate-spin" size={18} /> : <Camera size={18} />}
+            <button type="button" onClick={handleUploadMedia} disabled={isUploading} className="p-2.5 bg-black text-brand-orange rounded-xl border border-border-subtle transition-all active:scale-90 flex items-center justify-center" aria-label="Kamera">
+              {isUploading ? <Loader2 className="animate-spin" size={18} aria-hidden="true" /> : <Camera size={18} aria-hidden="true" />}
             </button>
             <input type="text" value={messageText} onChange={(e) => {
               const val = e.target.value;
@@ -630,8 +632,8 @@ export const ChatSection: React.FC<ChatSectionProps> = ({ chats, currentUser, us
                 if (e.key === 'Enter' && !e.shiftKey) handleSendMessage(e);
               }} />
             <button type="submit" disabled={!messageText.trim()}
-              className={`p-2.5 rounded-xl transition-all ${!messageText.trim() ? 'bg-neutral-800 text-neutral-600' : 'bg-brand-orange text-black font-black active:scale-95'}`}>
-              <Send size={18} />
+              className={`p-2.5 rounded-xl transition-all ${!messageText.trim() ? 'bg-neutral-800 text-neutral-600' : 'bg-brand-orange text-black font-black active:scale-95'}`} aria-label="Küldés">
+              <Send size={18} aria-hidden="true" />
             </button>
           </form>
         </div>

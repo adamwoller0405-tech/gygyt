@@ -86,6 +86,7 @@ export interface CyclingEvent {
   };
   photos?: string[]; // Media uploaded after event
   maxParticipants?: number;
+  checkIns?: { [userId: string]: string }; // userId → ISO timestamp of check-in
 }
 
 export interface FeedPost {

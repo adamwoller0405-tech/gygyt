@@ -10,6 +10,7 @@ import { FeedPost, UserProfile, UserRank, FeedComment } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
 import { useToast } from './Toast';
 import { ConfirmDialog } from './ConfirmDialog';
+import { checkRateLimit } from '../lib/rateLimit';
 import { PullToRefresh } from './PullToRefresh';
 
 interface FeedSectionProps {
@@ -120,6 +121,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostCaption.trim() || !newPostMediaUrl) return;
+    if (!checkRateLimit(`post_${currentUser.id}`, 5, 60000)) { toast('Túl sok bejegyzés! Várj egy kicsit.', 'warning'); return; }
 
     const extraTags = newPostCaption.match(/#[a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/g)?.map(m => m.replace('#', '').toLowerCase()) || [];
     if (!extraTags.includes('gygyt')) extraTags.push('gygyt');
@@ -163,7 +165,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
           <button onClick={() => setActiveTab('all')} className={`px-4 py-1.5 rounded-full text-xs font-black transition-all ${activeTab === 'all' ? 'bg-brand-orange text-black' : 'text-neutral-500'}`}>Hírfolyam</button>
           <button onClick={() => setActiveTab('saved')} className={`px-4 py-1.5 rounded-full text-xs font-black transition-all ${activeTab === 'saved' ? 'bg-brand-orange text-black' : 'text-neutral-500'}`}>Mentett</button>
         </div>
-        {isEditor && <button onClick={() => setShowNewPostModal(true)} className="bg-brand-orange/10 p-2 rounded-xl text-brand-orange transition-all active:scale-95"><PlusCircle size={20} /></button>}
+        {isEditor && <button onClick={() => setShowNewPostModal(true)} className="bg-brand-orange/10 p-2 rounded-xl text-brand-orange transition-all active:scale-95" aria-label="Új bejegyzés"><PlusCircle size={20} aria-hidden="true" /></button>}
       </div>
 
       <PullToRefresh onRefresh={handleRefresh}>
@@ -190,10 +192,10 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                 </div>
                 <div className="flex items-center space-x-2">
                   {post.authorId === currentUser.id && (
-                    <button onClick={() => setDeleteConfirmPost(post)} className="p-1.5 text-neutral-600 hover:text-red-500 transition-all"><Trash2 size={14} /></button>
+                    <button onClick={() => setDeleteConfirmPost(post)} className="p-1.5 text-neutral-600 hover:text-red-500 transition-all" aria-label="Törlés"><Trash2 size={14} aria-hidden="true" /></button>
                   )}
                   {onReport && (
-                    <button onClick={() => onReport('post', post.id)} className="p-1.5 text-neutral-600 hover:text-red-500 transition-all"><Flag size={14} /></button>
+                    <button onClick={() => onReport('post', post.id)} className="p-1.5 text-neutral-600 hover:text-red-500 transition-all" aria-label="Jelentés"><Flag size={14} aria-hidden="true" /></button>
                   )}
                 </div>
               </div>
@@ -230,12 +232,12 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                       <MessageCircle size={16} />
                       <span className="text-[10px] font-black">{post.comments.length || ''}</span>
                     </button>
-                    <button onClick={() => { const url = `${window.location.origin}/app/`; if (navigator.share) { navigator.share({ title: 'GYGYT Rideout', text: post.caption, url }).catch(() => {}); } else { navigator.clipboard?.writeText(url).catch(() => {}); } }} className="flex items-center space-x-1 text-neutral-600 hover:text-neutral-400 transition-all active:scale-90">
-                      <Share2 size={16} />
+                    <button onClick={() => { const url = `${window.location.origin}/app/`; if (navigator.share) { navigator.share({ title: 'GYGYT Rideout', text: post.caption, url }).catch(() => {}); } else { navigator.clipboard?.writeText(url).catch(() => {}); } }} className="flex items-center space-x-1 text-neutral-600 hover:text-neutral-400 transition-all active:scale-90" aria-label="Megosztás">
+                      <Share2 size={16} aria-hidden="true" />
                     </button>
                   </div>
-                  <button onClick={() => handleSave(post.id)} className={`transition-all active:scale-90 ${post.isSaved ? 'text-brand-orange' : 'text-neutral-600 hover:text-neutral-400'}`}>
-                    <Bookmark size={16} fill={post.isSaved ? 'currentColor' : 'none'} />
+                  <button onClick={() => handleSave(post.id)} className={`transition-all active:scale-90 ${post.isSaved ? 'text-brand-orange' : 'text-neutral-600 hover:text-neutral-400'}`} aria-label="Mentés">
+                    <Bookmark size={16} fill={post.isSaved ? 'currentColor' : 'none'} aria-hidden="true" />
                   </button>
                 </div>
 
@@ -262,11 +264,11 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                         placeholder="Írj hozzászólást..."
                         className="flex-1 bg-black border border-border-subtle rounded-2xl px-4 py-2 text-xs text-white placeholder-neutral-700 outline-none focus:border-brand-orange"
                       />
-                      <button onClick={() => handleCommentUpload(post.id)} disabled={commentUploading === post.id} className="text-neutral-600 hover:text-brand-orange p-2 active:scale-90 transition-all">
-                        {commentUploading === post.id ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                      <button onClick={() => handleCommentUpload(post.id)} disabled={commentUploading === post.id} className="text-neutral-600 hover:text-brand-orange p-2 active:scale-90 transition-all" aria-label="Kamera">
+                        {commentUploading === post.id ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Camera size={16} aria-hidden="true" />}
                       </button>
-                      <button onClick={() => handleComment(post.id)} className="text-brand-orange p-2 active:scale-90 transition-all">
-                        <Send size={16} />
+                      <button onClick={() => handleComment(post.id)} className="text-brand-orange p-2 active:scale-90 transition-all" aria-label="Küldés">
+                        <Send size={16} aria-hidden="true" />
                       </button>
                     </div>
                   </div>
@@ -406,7 +408,7 @@ const ImageViewer: React.FC<{ url: string; onClose: () => void }> = ({ url, onCl
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
     >
-      <button onClick={onClose} className="absolute top-6 right-6 z-10 text-white/70 hover:text-white p-2"><X size={28} /></button>
+      <button onClick={onClose} className="absolute top-6 right-6 z-10 text-white/70 hover:text-white p-2" aria-label="Bezárás"><X size={28} aria-hidden="true" /></button>
       {scale > 1 && (
         <button onClick={resetZoom} className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-white/10 text-white text-xs font-black px-5 py-2 rounded-full backdrop-blur-md hover:bg-white/20 transition-all">
           1:1 ({scale.toFixed(1)}x)

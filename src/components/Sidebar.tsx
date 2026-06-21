@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="fixed top-0 right-0 h-full w-72 z-[100] bg-bg-panel border-l border-border-subtle shadow-2xl animate-slide-in-right flex flex-col">
         <div className="flex items-center justify-between px-6 py-5 border-b border-border-subtle">
           <h2 className="text-sm font-black text-white uppercase tracking-widest">Menü</h2>
-          <button onClick={onClose} className="p-2 text-neutral-500 hover:text-white transition-colors"><X size={20} /></button>
+          <button onClick={onClose} className="p-2 text-neutral-500 hover:text-white transition-colors" aria-label="Bezárás"><X size={20} aria-hidden="true" /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-1">

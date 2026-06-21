@@ -221,8 +221,8 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
                 placeholder="Keresés név alapján..."
                 className="w-full bg-black border border-border-subtle rounded-2xl px-9 py-3 text-xs text-neutral-200 placeholder-neutral-700 outline-none focus:border-brand-orange transition-all" />
               {userSearch && (
-                <button onClick={() => setUserSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white">
-                  <X size={14} />
+                <button onClick={() => setUserSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white" aria-label="Keresés törlése">
+                  <X size={14} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -282,7 +282,7 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
                   <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">Profil Szerkesztés</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedUserToEdit(null)} className="p-2 bg-white/5 rounded-full hover:text-white transition-colors"><X size={20} /></button>
+              <button onClick={() => setSelectedUserToEdit(null)} className="p-2 bg-white/5 rounded-full hover:text-white transition-colors" aria-label="Bezárás"><X size={20} aria-hidden="true" /></button>
             </div>
 
             {/* Név */}
@@ -292,7 +292,7 @@ export const ModerationSection: React.FC<ModerationSectionProps> = ({
                 <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
                   className="flex-1 bg-black border border-border-subtle rounded-2xl px-4 py-3 text-xs text-neutral-200 outline-none focus:border-brand-orange" />
                 <button onClick={handleSaveName} disabled={!editName.trim() || editName.trim() === selectedUserToEdit?.name}
-                  className="p-3 rounded-2xl bg-brand-orange text-black disabled:opacity-30 transition-all active:scale-90"><Save size={16} /></button>
+                  className="p-3 rounded-2xl bg-brand-orange text-black disabled:opacity-30 transition-all active:scale-90" aria-label="Mentés"><Save size={16} aria-hidden="true" /></button>
               </div>
             </div>
 

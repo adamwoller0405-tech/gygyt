@@ -39,6 +39,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
   const [selectedEventIdForPhoto, setSelectedEventIdForPhoto] = useState<string | null>(null);
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const handleRefresh = async () => {
     await new Promise(r => setTimeout(r, 500));
@@ -230,15 +231,17 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                       }}
                       className="p-1.5 text-neutral-600 hover:text-brand-orange transition-colors"
                       title="Naptárba"
+                      aria-label="Letöltés"
                     >
-                      <Download size={14} />
+                      <Download size={14} aria-hidden="true" />
                     </button>
                     {isEditor && (
                       <button
                         onClick={() => handleDeleteEvent(ev.id)}
                         className="p-1.5 text-neutral-600 hover:text-red-500 transition-colors"
+                        aria-label="Törlés"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={14} aria-hidden="true" />
                       </button>
                     )}
                   </div>
@@ -356,14 +359,28 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                         
                         const strokeColor = status === 'going' ? 'border-green-500' : 'border-yellow-500';
 
+                        const hasCheckedIn = ev.checkIns?.[userId];
                         return (
                           <div key={userId} className="relative group/avatar">
                             <img
                               src={rider.avatarUrl}
                               alt={rider.name}
-                              className={`w-7 h-7 rounded-full object-cover border-2 ${strokeColor} shadow-md`}
+                              className={`w-7 h-7 rounded-full object-cover border-2 shadow-md ${hasCheckedIn ? 'border-blue-400 ring-2 ring-blue-400/30' : strokeColor}`}
                               title={rider.name}
                             />
+                            {hasCheckedIn && (
+                              <span className="absolute -bottom-0.5 -right-0.5 bg-blue-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center shadow-lg border border-black" title="Bejelentkezve">
+                                <Check size={7} strokeWidth={4} />
+                              </span>
+                            )}
+                            {isEditor && !hasCheckedIn && status === 'going' && (
+                              <button onClick={() => {
+                                const updated = events.map(e => e.id === ev.id ? { ...e, checkIns: { ...(e.checkIns || {}), [userId]: new Date().toISOString() } } : e);
+                                onUpdateEvents(updated);
+                              }} className="absolute -top-1 -right-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all shadow-lg border border-black">
+                                <Check size={8} strokeWidth={4} />
+                              </button>
+                            )}
                           </div>
                         );
                       })}
@@ -429,8 +446,8 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                 <Calendar className="text-brand-orange" size={20} />
                 <h3 className="text-sm font-black text-white uppercase tracking-wider">Új Esemény Kiírása</h3>
               </div>
-              <button onClick={() => setShowCreateModal(false)} className="text-neutral-500 hover:text-white transition-colors">
-                <X size={20} />
+              <button onClick={() => setShowCreateModal(false)} className="text-neutral-500 hover:text-white transition-colors" aria-label="Bezárás">
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
 
@@ -525,6 +542,41 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                   className="w-full bg-black border border-border-subtle rounded-2xl px-4 py-3 text-neutral-200 outline-none focus:border-brand-orange transition-all"
                 />
               </div>
+
+              {/* Templates */}
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => {
+                  const name = prompt('Sablon neve:');
+                  if (!name?.trim()) return;
+                  const templates = JSON.parse(localStorage.getItem('event_templates') || '[]');
+                  templates.push({ name: name.trim(), title, description, difficulty, type, locationName, maxParticipants });
+                  localStorage.setItem('event_templates', JSON.stringify(templates));
+                  toast('Sablon elmentve!');
+                }} className="flex-1 p-3 rounded-2xl border border-border-subtle bg-black text-neutral-400 font-black text-[9px] uppercase tracking-wider hover:text-neutral-200 transition-all">
+                  ⭐ SABLON MENTÉSE
+                </button>
+                <button type="button" onClick={() => setShowTemplates(!showTemplates)} className="flex-1 p-3 rounded-2xl border border-border-subtle bg-black text-neutral-400 font-black text-[9px] uppercase tracking-wider hover:text-neutral-200 transition-all">
+                  📂 SABLON BETÖLTÉSE
+                </button>
+              </div>
+              {showTemplates && (() => {
+                const templates = JSON.parse(localStorage.getItem('event_templates') || '[]');
+                if (templates.length === 0) return <p className="text-[9px] text-neutral-600 text-center">Nincs mentett sablon</p>;
+                return (
+                  <div className="space-y-1.5 max-h-28 overflow-y-auto">
+                    {templates.map((t: any, i: number) => (
+                      <button key={i} type="button" onClick={() => {
+                        setTitle(t.title); setDescription(t.description || ''); setDifficulty(t.difficulty);
+                        setType(t.type); setLocationName(t.locationName); setMaxParticipants(t.maxParticipants || 0);
+                        setShowTemplates(false);
+                      }} className="w-full p-2.5 rounded-2xl bg-black border border-border-subtle text-left hover:border-brand-orange/30 transition-all">
+                        <p className="text-[10px] font-bold text-neutral-200">{t.name}</p>
+                        <p className="text-[7px] text-neutral-500">{t.type} • {t.difficulty}{t.locationName ? ` • ${t.locationName}` : ''}</p>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
 
               <div className="flex space-x-3 pt-4">
                 <button

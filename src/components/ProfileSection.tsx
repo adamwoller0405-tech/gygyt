@@ -72,8 +72,9 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           <button
             onClick={() => setIsEditing(!isEditing)}
             className={`p-2.5 rounded-2xl border transition-all ${isEditing ? 'bg-brand-orange text-black border-brand-orange' : 'bg-white/5 text-neutral-500 border-white/5'}`}
+            aria-label="Szerkesztés"
           >
-            {isEditing ? <X size={20} /> : <Settings size={20} />}
+            {isEditing ? <X size={20} aria-hidden="true" /> : <Settings size={20} aria-hidden="true" />}
           </button>
         </div>
 
@@ -96,8 +97,9 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
                   onClick={handleUploadAvatar}
                   disabled={isUploading}
                   className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-[44px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  aria-label="Profilkép feltöltése"
                 >
-                  {isUploading ? <Loader2 className="animate-spin text-white" size={24} /> : <Camera className="text-white" size={28} />}
+                  {isUploading ? <Loader2 className="animate-spin text-white" size={24} aria-hidden="true" /> : <Camera className="text-white" size={28} aria-hidden="true" />}
                 </button>
               </div>
 
@@ -164,7 +166,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             </div>
             <div className="grid grid-cols-4 gap-2">
               {achievementsWithStatus.map(ach => (
-                <div key={ach.id} className={`flex flex-col items-center p-3 rounded-2xl border transition-all ${ach.hasUnlocked ? 'bg-brand-orange/10 border-brand-orange/30' : 'bg-black/40 border-border-subtle opacity-40'}`}>
+                <div key={ach.id} title={`${ach.title}: ${ach.description}`} className={`flex flex-col items-center p-3 rounded-2xl border transition-all ${ach.hasUnlocked ? 'bg-brand-orange/10 border-brand-orange/30' : 'bg-black/40 border-border-subtle opacity-40'}`}>
                   <div className={`text-xl mb-1 ${ach.hasUnlocked ? '' : 'grayscale'}`}>
                     {ach.id === 'first_ride' ? '🚴' : ach.id === 'event_master' ? '📅' : ach.id === 'photo_master' ? '📸' : ach.id === 'chat_legend' ? '💬' : ach.id === 'veteran' ? '🛡️' : ach.id === 'social_butterfly' ? '🦋' : ach.id === 'night_rider' ? '🌙' : '🏆'}
                   </div>
