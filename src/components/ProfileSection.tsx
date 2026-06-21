@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun } from 'lucide-react';
+import { User, TrendingUp, Target, Compass, Settings, LogOut, Camera, Save, X, Loader2, Award, Check, Moon, Sun, Share2 } from 'lucide-react';
 import { getPhoto, uploadMedia } from '../lib/capacitor-web';
 import { UserProfile } from '../types';
 import { BadgeRenderer } from './BadgeRenderer';
@@ -161,6 +161,11 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
               ))}
             </div>
           </div>
+
+          <button onClick={() => { const url = `${window.location.origin}/app/?user=${currentUser.id}`; if (navigator.share) { navigator.share({ title: `GYGYT Rideout — ${currentUser.name}`, url }).catch(() => {}); } else { navigator.clipboard?.writeText(url).catch(() => {}); } }} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">
+            <Share2 size={18} className="text-brand-orange" />
+            <span className="text-xs font-black text-white uppercase tracking-wider">Profil Megosztása</span>
+          </button>
 
           {onToggleTheme && (
             <button onClick={onToggleTheme} className="w-full bg-bg-card border border-border-card p-5 rounded-[36px] flex items-center justify-center space-x-3 hover:bg-white/5 transition-all shadow-xl">

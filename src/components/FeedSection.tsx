@@ -33,6 +33,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [isMediaVideo, setIsMediaVideo] = useState(false);
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
+  const [commentUploading, setCommentUploading] = useState<string | null>(null);
   const [currentHashFilter, setCurrentHashFilter] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [deleteConfirmPost, setDeleteConfirmPost] = useState<FeedPost | null>(null);
@@ -70,9 +71,9 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
     onUpdatePosts(updated);
   };
 
-  const handleComment = (postId: string) => {
+  const handleComment = async (postId: string, imageUrl?: string) => {
     const text = commentInputs[postId]?.trim();
-    if (!text) return;
+    if (!text && !imageUrl) return;
     const comment: FeedComment = {
       id: `comment_${Date.now()}`,
       postId,
@@ -80,14 +81,28 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
       authorName: currentUser.name,
       authorAvatar: currentUser.avatarUrl,
       authorRank: currentUser.rank,
-      content: text,
-      createdAt: new Date().toISOString()
+      content: text || '',
+      createdAt: new Date().toISOString(),
+      imageUrl
     };
     const updated = posts.map(p =>
       p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
     );
     onUpdatePosts(updated);
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+  };
+
+  const handleCommentUpload = async (postId: string) => {
+    try {
+      const image = await getPhoto({ quality: 70, allowEditing: false });
+      if (image.webPath) {
+        setCommentUploading(postId);
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const url = await uploadMedia(blob);
+        await handleComment(postId, url);
+      }
+    } catch {} finally { setCommentUploading(null); }
   };
 
   const handleSave = (postId: string) => {
@@ -228,7 +243,8 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                             <span className="text-[10px] font-black text-white">{c.authorName}</span>
                             <span className="text-[7px] text-neutral-600 font-black uppercase tracking-wider">{c.authorRank}</span>
                           </div>
-                          <p className="text-[11px] text-neutral-300 mt-0.5">{c.content}</p>
+                          {c.content && <p className="text-[11px] text-neutral-300 mt-0.5">{c.content}</p>}
+                          {c.imageUrl && <img src={c.imageUrl} className="mt-1.5 rounded-xl max-w-[180px] border border-white/5" alt="" />}
                         </div>
                       </div>
                     ))}
@@ -240,6 +256,9 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
                         placeholder="Írj hozzászólást..."
                         className="flex-1 bg-black border border-border-subtle rounded-2xl px-4 py-2 text-xs text-white placeholder-neutral-700 outline-none focus:border-brand-orange"
                       />
+                      <button onClick={() => handleCommentUpload(post.id)} disabled={commentUploading === post.id} className="text-neutral-600 hover:text-brand-orange p-2 active:scale-90 transition-all">
+                        {commentUploading === post.id ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                      </button>
                       <button onClick={() => handleComment(post.id)} className="text-brand-orange p-2 active:scale-90 transition-all">
                         <Send size={16} />
                       </button>

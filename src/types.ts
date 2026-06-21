@@ -109,6 +109,7 @@ export interface FeedComment {
   authorRank: UserRank;
   content: string;
   createdAt: string;
+  imageUrl?: string;
 }
 
 export interface Achievement {

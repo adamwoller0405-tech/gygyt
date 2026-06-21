@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy, useCallback } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy, useCallback } from 'react';
 import {
   MessageSquare,
   Calendar,
@@ -49,7 +49,7 @@ const PhotoGallery = lazy(() => import('./components/PhotoGallery').then(m => ({
 const CalendarSection = lazy(() => import('./components/CalendarSection').then(m => ({ default: m.CalendarSection })));
 const ContactSection = lazy(() => import('./components/ContactSection').then(m => ({ default: m.ContactSection })));
 
-import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report, AppNotification } from './types';
+import { UserProfile, UserRank, ChatMessage, CyclingEvent, FeedPost, JoinRequest, Announcement, Report, AppNotification, Achievement } from './types';
 import { DEFAULT_AVATAR } from './lib/defaults';
 import { APP_VERSION } from './lib/version';
 import { ToastProvider, useToast } from './components/Toast';
@@ -80,6 +80,7 @@ function AppContent() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [showBugReport, setShowBugReport] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const prevAchievementsRef = useRef<string[]>([]);
 
   useEffect(() => {
     enableMultiTabIndexedDbPersistence(db).catch(() => {});
@@ -224,6 +225,20 @@ function AppContent() {
   );
   const isMod = activeUser && (activeUser.rank === UserRank.ADMIN || activeUser.rank === UserRank.ELITE);
   const unreadNotifs = notifications.filter(n => !n.read).length;
+
+  // Achievement notification
+  useEffect(() => {
+    if (!activeUser) return;
+    const prev = prevAchievementsRef.current;
+    const current = activeUser.achievements || [];
+    if (prev.length > 0 && current.length > prev.length) {
+      const newOnes = current.filter(a => !prev.includes(a));
+      for (const achId of newOnes) {
+        toast(`🎉 Új kitüntetés: ${achId === 'first_ride' ? 'Első Tekerés' : achId === 'event_master' ? 'Eseménymester' : achId === 'photo_master' ? 'Fotós Mester' : achId === 'chat_legend' ? 'Chat Legenda' : achId === 'veteran' ? 'Profi' : achId}`, 'success');
+      }
+    }
+    prevAchievementsRef.current = current;
+  }, [activeUser?.achievements]);
 
   const markNotifsRead = async () => {
     const unread = notifications.filter(n => !n.read);
